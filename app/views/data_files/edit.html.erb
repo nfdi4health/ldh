@@ -27,11 +27,15 @@
 
       </div>
 
+      <% if Seek::Config.human_diseases_enabled %>
+        <%= f.fancy_multiselect :human_diseases, { possibilities: HumanDisease.order(:title).all, with_new_link: true, hidden: false } %>
+      <% end %>
+
       <% if Seek::Config.file_templates_enabled %>
         <%= render :partial => "assets/select_template", :locals => {:resource => (@data_file ? @data_file : DataFile.new),
 	:templates => authorised_assets(FileTemplate, nil, 'edit') } %>
       <% end %>
-      
+
       <%= render :partial => 'assets/controlled_vocab_annotations_form_properties', :locals => { :resource => (@data_file ? @data_file : DataFile.new) } -%>
 
       <%= render :partial => 'assets/license_selector', :locals => { :resource => @data_file } %>

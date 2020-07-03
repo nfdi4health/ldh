@@ -381,8 +381,8 @@ class DataFilesController < ApplicationController
 
     if all_valid
 
-      update_relationships(@data_file, params)      
-      
+      update_relationships(@data_file, params)
+
 
       respond_to do |format|
         flash[:notice] = "#{t('data_file')} was successfully uploaded and saved." if flash.now[:notice].nil?
@@ -390,8 +390,8 @@ class DataFilesController < ApplicationController
 
         # the assay_id param can also contain the relationship type
         @data_file.assays << @assay if @create_new_assay
-        format.html { redirect_to params[:single_page] ? 
-          { controller: :single_pages, action: :show, id: params[:single_page] } 
+        format.html { redirect_to params[:single_page] ?
+          { controller: :single_pages, action: :show, id: params[:single_page] }
           : data_file_path(@data_file) }
         format.json { render json: @data_file, include: [params[:include]] }
       end
@@ -469,7 +469,7 @@ class DataFilesController < ApplicationController
 
   def data_file_params
     params.require(:data_file).permit(:title, :description, :simulation_data, { project_ids: [] },
-                                      :license, *creator_related_params, { event_ids: [] },
+                                      :license, *creator_related_params, { event_ids: [] }, { human_disease_ids: [] },
                                       { special_auth_codes_attributes: [:code, :expiration_date, :id, :_destroy] },
                                       { assay_assets_attributes: [:assay_id, :relationship_type_id] },
                                       { creator_ids: [] }, { assay_assets_attributes: [:assay_id, :relationship_type_id] },
