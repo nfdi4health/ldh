@@ -86,7 +86,6 @@ class AssaysController < ApplicationController
     @assay = Assay.new(assay_params)
 
     update_assay_organisms @assay, params
-    update_assay_human_diseases @assay, params
     @assay.contributor = current_person
     update_sharing_policies @assay
     update_annotations(params[:tag_list], @assay)
@@ -132,7 +131,6 @@ class AssaysController < ApplicationController
 
   def update
     update_assay_organisms @assay, params
-    update_assay_human_diseases @assay, params
     update_annotations(params[:tag_list], @assay)
     update_sharing_policies @assay
     update_relationships(@assay, params)
@@ -160,14 +158,6 @@ class AssaysController < ApplicationController
     end
   end
 
-  def update_assay_human_diseases(assay, params)
-    human_diseases             = params[:assay_human_disease_ids] || params[:assay][:human_disease_ids] || []
-    assay.assay_human_diseases = []
-    Array(human_diseases).each do |human_disease_id|
-      assay.associate_human_disease(human_disease_id)
-    end
-  end
-
   def show
     respond_to do |format|
       format.html { render(params[:only_content] ? { layout: false } : {}) }
@@ -185,7 +175,7 @@ class AssaysController < ApplicationController
                                   { samples_attributes: %i[asset_id direction] },
                                   { data_files_attributes: %i[asset_id direction relationship_type_id] },
                                   { placeholders_attributes: %i[asset_id direction relationship_type_id] },
-                                  { publication_ids: [] },
+                                  { publication_ids: [] }, { human_disease_ids: [] },
                                   { extended_metadata_attributes: determine_extended_metadata_keys },
           { discussion_links_attributes:[:id, :url, :label, :_destroy] }
                                   ).tap do |assay_params|
