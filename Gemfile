@@ -28,6 +28,8 @@ gem 'savon', '1.1.0'
 gem 'delayed_job_active_record'
 gem 'daemons','1.1.9'
 gem 'linkeddata', '~> 3.2.0'
+gem 'rdf'
+gem 'rdf-vocab', '~> 3.1.13'
 gem 'indefinite_article'
 
 gem 'openseek-api'
