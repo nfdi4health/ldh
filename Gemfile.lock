@@ -600,7 +600,7 @@ GEM
     rb-fsevent (0.11.0)
     rb-inotify (0.10.1)
       ffi (~> 1.0)
-    rdf (3.2.6)
+    rdf (3.2.8)
       link_header (~> 0.0, >= 0.0.8)
     rdf-aggregate-repo (3.2.0)
       rdf (~> 3.2)
@@ -1003,7 +1003,7 @@ DEPENDENCIES
   ransack
   rdf
   rdf-virtuoso (>= 0.2.0)
-  rdf-vocab (~> 3.1.13)
+  rdf-vocab (~> 3.2.1)
   rdoc
   recaptcha (~> 4.1.0)
   remotipart (~> 1.4.4)
