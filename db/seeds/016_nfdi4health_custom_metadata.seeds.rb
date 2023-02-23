@@ -649,7 +649,7 @@ end
 disable_authorization_checks do
   ['Study', 'Investigation'].each do |isa_type|
     CustomMetadataType.where(title: "MDS #{@mds_version} Interventional Study", supported_type: isa_type).first_or_create!(
-      custom_metadata_attributes: create_generic_attributes("#{isa_type.downcase}.is") + create_interventional_attributes("#{isa_type.downcase}.nis")
+      custom_metadata_attributes: create_generic_attributes("#{isa_type.downcase}.is") + create_interventional_attributes("#{isa_type.downcase}.is")
     )
     CustomMetadataType.where(title: "MDS #{@mds_version} Non-Interventional Study", supported_type: isa_type).first_or_create!(
       custom_metadata_attributes: create_generic_attributes("#{isa_type.downcase}.nis") + create_non_interventional_attributes("#{isa_type.downcase}.nis")
