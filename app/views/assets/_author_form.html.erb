@@ -5,11 +5,11 @@
 
 <%
   resource = form.object
+  resource_type = resource.class.name.underscore
   resource_type_text = text_for_resource(resource)
   collapsed = (resource.assets_creators.empty? && resource.other_creators.blank?) if collapsed.nil?
   assoc_text ||= resource.class.human_attribute_name('creators', default: t('creator').pluralize).downcase
   field_name ||= format_field_name("#{resource_type}[assets_creators_attributes]")
-
 
   resource.assets_creators.build(creator: current_user.person) if resource.try(:creators).blank? && ['new','provide_metadata'].include?(action_name)
 
