@@ -12,11 +12,15 @@ module Seek
         disable_authorization_checks do
           client = Ebi::OlsClient.new
           project = Project.find_or_create_by(title: 'Default Project')
-          Dir.foreach(File.join(Rails.root, 'config/default_data/source_types/')) do |filename|
+          directory = Seek::Config.append_filestore_path('source_types')
+          directory_files = Dir.exist?(directory) ? Dir.glob("#{directory}/*.json") : []
+          raise '<ul><li>Make sure to upload files that have the ".json" extension.</li></ul>' if directory_files == []
+
+          directory_files.each do |filename|
             puts filename
             next if File.extname(filename) != '.json'
 
-            file = File.read(File.join(Rails.root, 'config/default_data/source_types/', filename))
+            file = File.read(filename)
             res = check_json_file(file)
             raise res if res.present?
 
@@ -154,13 +158,19 @@ module Seek
       end
 
       def self.get_sample_attribute_type(title)
-        SampleAttributeType.where(title: title).first.id
+        sa = SampleAttributeType.find_by(title: title)
+        raise "Could not find a Sample Attribute named '#{title}'" if sa.nil?
+
+        sa.id
       end
 
       def self.get_isa_tag_id(title)
         return nil if title.blank?
 
-        IsaTag.where(title: title).first.id
+        it = IsaTag.find_by(title: title)
+        raise "Could not find an ISA Tag named '#{title}'" if it.nil?
+
+        it.id
       end
 
       def self.seed_isa_tags
@@ -168,11 +178,11 @@ module Seek
       end
 
       def self.lockfile
-        Rails.root.join('tmp', 'populate_templates.lock')
+        Rails.root.join(Seek::Config.temporary_filestore_path, 'populate_templates.lock')
       end
 
       def self.resultfile
-        Rails.root.join('tmp', 'populate_templates.result')
+        Rails.root.join(Seek::Config.temporary_filestore_path, 'populate_templates.result')
       end
     end
   end

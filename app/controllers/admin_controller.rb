@@ -16,10 +16,9 @@ class AdminController < ApplicationController
   end  
 
   def update_admins
-    admin_ids = params[:admins].split(',') || []
     # Don't let admin remove themselves or they won't be able to manage roles
     current_admins = Person.admins.where.not(id: current_person)
-    admins = admin_ids.map { |id| Person.find(id) }
+    admins = Person.find(params[:admins].compact_blank)
     current_admins.each { |ca| ca.is_admin = false }
     admins.each { |admin| admin.is_admin = true }
     (admins | current_admins).each(&:save!)
@@ -164,6 +163,7 @@ class AdminController < ApplicationController
     Seek::Config.life_monitor_url = params[:life_monitor_url]&.strip&.chomp('/')
     Seek::Config.life_monitor_client_id = params[:life_monitor_client_id]&.strip
     Seek::Config.life_monitor_client_secret = params[:life_monitor_client_secret]&.strip
+    Seek::Config.life_monitor_ui_url = params[:life_monitor_ui_url]&.strip&.chomp('/')
 
     Seek::Config.bio_tools_enabled = string_to_boolean(params[:bio_tools_enabled])
 
@@ -331,6 +331,7 @@ class AdminController < ApplicationController
     Seek::Config.orcid_required = string_to_boolean params[:orcid_required]
 
     Seek::Config.default_license = params[:default_license]
+    Seek::Config.metadata_license = params[:metadata_license]
     Seek::Config.recommended_data_licenses = params[:recommended_data_licenses]
     Seek::Config.recommended_software_licenses = params[:recommended_software_licenses]
     update_flag = (pubmed_email == '' || pubmed_email_valid) && (crossref_email == '' || crossref_email_valid)
@@ -383,13 +384,15 @@ class AdminController < ApplicationController
     if request.post?
       replacement_tags = []
 
-      if params[:tag_list].blank?
+      tag_list = params[:tag_list].compact_blank
+
+      if tag_list.empty?
         flash[:error] = 'Not tags provided, use Delete to delete a tag. Make sure you register the replacement tag by pressing comma'
         respond_to do |format|
           format.html { render status: :not_acceptable }
         end
       else
-        params[:tag_list].split(',').each do |item|
+        tag_list.each do |item|
           item.strip!
           tag = TextValue.find_by_text(item)
           tag = TextValue.create(text: item) if tag.nil? || tag.text != item # case sensitivity check
@@ -682,7 +685,6 @@ class AdminController < ApplicationController
   def update_redirect_to(flag, action)
     if flag
       flash[:notice] = RESTART_MSG
-      expire_header_and_footer
       redirect_to action: :show
     else
       redirect_to action: action.to_s

@@ -7,7 +7,7 @@ class LinkingSamplesUpdateJobTest < ActiveSupport::TestCase
 
   test 'perform' do
     sample = Sample.first
-    sample.set_attribute_value(:full_name, 'Ali Mohammadi')
+    sample.set_attribute_value('full name', 'Ali Mohammadi')
     disable_authorization_checks { sample.save! }
 
     LinkingSamplesUpdateJob.perform_now(sample)
@@ -18,13 +18,13 @@ class LinkingSamplesUpdateJobTest < ActiveSupport::TestCase
   end
 
   def create_linked_samples
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     project = person.projects.first
 
-    main_sample = Factory(:max_sample)
+    main_sample = FactoryBot.create(:patient_sample)
     sample_type = main_sample.sample_type
 
-    another_sample_type = Factory(:multi_linked_sample_type, project_ids: [project.id])
+    another_sample_type = FactoryBot.create(:multi_linked_sample_type, project_ids: [project.id])
     another_sample_type.sample_attributes.last.linked_sample_type = sample_type
     another_sample_type.save!
 

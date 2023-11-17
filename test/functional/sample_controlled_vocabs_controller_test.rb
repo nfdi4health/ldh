@@ -4,7 +4,7 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   include AuthenticatedTestHelper
 
   test 'show' do
-    cv = Factory(:apples_sample_controlled_vocab)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     get :show, params: { id: cv }
     assert_response :success
     assert_select 'table' do
@@ -15,7 +15,7 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'show for ontology' do
-    cv = Factory(:ontology_sample_controlled_vocab)
+    cv = FactoryBot.create(:ontology_sample_controlled_vocab)
     get :show, params: { id: cv }
     assert_response :success
     assert_select 'table' do
@@ -39,14 +39,14 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'project required for new' do
-    login_as(Factory(:person_not_in_project))
+    login_as(FactoryBot.create(:person_not_in_project))
     get :new
     assert_response :redirect
     assert flash[:error]
   end
 
   test 'project admin required for new if configured' do
-    login_as(Factory(:person))
+    login_as(FactoryBot.create(:person))
     with_config_value :project_admin_sample_type_restriction, false do
       get :new
       assert_response :success
@@ -60,12 +60,12 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'new' do
-    login_as(Factory(:project_administrator))
+    login_as(FactoryBot.create(:project_administrator))
     assert_response :success
   end
 
   test 'create' do
-    login_as(Factory(:project_administrator))
+    login_as(FactoryBot.create(:project_administrator))
     assert_difference('SampleControlledVocab.count') do
       assert_difference('SampleControlledVocabTerm.count', 2) do
         post :create, params: { sample_controlled_vocab: { title: 'fish', description: 'About fish',
@@ -100,7 +100,7 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'project required for create' do
-    login_as(Factory(:person_not_in_project))
+    login_as(FactoryBot.create(:person_not_in_project))
     assert_no_difference('SampleControlledVocab.count') do
       assert_no_difference('SampleControlledVocabTerm.count', 2) do
         post :create, params: { sample_controlled_vocab: { title: 'fish', description: 'About fish',
@@ -116,8 +116,8 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'update' do
-    login_as(Factory(:admin))
-    cv = Factory(:apples_sample_controlled_vocab)
+    login_as(FactoryBot.create(:admin))
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     term_ids = cv.sample_controlled_vocab_terms.collect(&:id)
     assert_no_difference('SampleControlledVocab.count') do
       assert_no_difference('SampleControlledVocabTerm.count') do
@@ -141,7 +141,7 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'login required for update' do
-    cv = Factory(:apples_sample_controlled_vocab)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     term_ids = cv.sample_controlled_vocab_terms.collect(&:id)
     assert_no_difference('SampleControlledVocab.count') do
       assert_no_difference('SampleControlledVocabTerm.count') do
@@ -160,27 +160,27 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'edit' do
-    login_as(Factory(:project_administrator))
-    cv = Factory(:apples_sample_controlled_vocab)
+    login_as(FactoryBot.create(:project_administrator))
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     get :edit, params: { id: cv.id }
     assert_response :success
   end
 
   test 'login required for edit' do
-    cv = Factory(:apples_sample_controlled_vocab)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     get :edit, params: { id: cv.id }
     assert_response :redirect
   end
 
   test 'index' do
-    cv = Factory(:apples_sample_controlled_vocab)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     get :index
     assert_response :success
   end
 
   test 'destroy' do
-    login_as(Factory(:admin))
-    cv = Factory(:apples_sample_controlled_vocab)
+    login_as(FactoryBot.create(:admin))
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     assert_difference('SampleControlledVocab.count', -1) do
       assert_difference('SampleControlledVocabTerm.count', -4) do
         delete :destroy, params: { id: cv }
@@ -189,7 +189,7 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'need login to destroy' do
-    cv = Factory(:apples_sample_controlled_vocab)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     assert_no_difference('SampleControlledVocab.count') do
       assert_no_difference('SampleControlledVocabTerm.count') do
         delete :destroy, params: { id: cv }
@@ -199,8 +199,8 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'need to be project member to destroy' do
-    login_as(Factory(:user))
-    cv = Factory(:apples_sample_controlled_vocab)
+    login_as(FactoryBot.create(:user))
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     assert_no_difference('SampleControlledVocab.count') do
       assert_no_difference('SampleControlledVocabTerm.count') do
         delete :destroy, params: { id: cv }
@@ -210,8 +210,8 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'cannot access when disabled' do
-    person = Factory(:person)
-    cv = Factory(:apples_sample_controlled_vocab)
+    person = FactoryBot.create(:person)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     login_as(person.user)
     with_config_value :samples_enabled, false do
       get :show, params: { id: cv.id }
@@ -233,9 +233,9 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'edit ontology based cv should have non editable terms' do
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     login_as(person)
-    cv = Factory(:ontology_sample_controlled_vocab)
+    cv = FactoryBot.create(:ontology_sample_controlled_vocab)
     assert cv.ontology_based?
     get :edit, params:{id: cv.id}
     assert_response :success
@@ -246,16 +246,12 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
       end
     end
 
-    assert_select('a#add-term') do |button|
-      assert button.attr('disabled').present?
-    end
-
   end
 
   test 'edit simple, non ontology cv should have editable terms' do
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     login_as(person)
-    cv = Factory(:apples_sample_controlled_vocab)
+    cv = FactoryBot.create(:apples_sample_controlled_vocab)
     refute cv.ontology_based?
     get :edit, params:{id: cv.id}
     assert_response :success
@@ -272,43 +268,45 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'fetch ols terms with root term included' do
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     login_as(person)
-    VCR.use_cassette('ols/fetch_obo_cell_projection') do
-      get :fetch_ols_terms, params: { source_ontology_id: 'ro',
-                                      root_uri: 'http://purl.obolibrary.org/obo/GO_0042995',
+    VCR.use_cassette('ols/fetch_obo_plant_cell_papilla') do
+      get :fetch_ols_terms, params: { source_ontology_id: 'go',
+                                      root_uri: 'http://purl.obolibrary.org/obo/GO_0090395',
                                       include_root_term: '1' }, format: :json
 
       assert_response :success
       res = JSON.parse(response.body)
       assert_equal 4, res.length
       iris = res.map { |term| term['iri'] }
-      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0043005'
-      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0042995'
+      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0090395'
+      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0090396'
+      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0090397'
     end
   end
 
   test 'fetch ols terms without root term included' do
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     login_as(person)
-    VCR.use_cassette('ols/fetch_obo_cell_projection') do
-      get :fetch_ols_terms, params: { source_ontology_id: 'ro',
-                                      root_uri: 'http://purl.obolibrary.org/obo/GO_0042995' }, format: :json
+    VCR.use_cassette('ols/fetch_obo_plant_cell_papilla') do
+      get :fetch_ols_terms, params: { source_ontology_id: 'go',
+                                      root_uri: 'http://purl.obolibrary.org/obo/GO_0090395' }, format: :json
 
       assert_response :success
       res = JSON.parse(response.body)
       assert_equal 3, res.length
       iris = res.map { |term| term['iri'] }
-      refute_includes iris, 'http://purl.obolibrary.org/obo/GO_0042995'
-      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0043005'
+      refute_includes iris, 'http://purl.obolibrary.org/obo/GO_0090395'
+      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0090396'
+      assert_includes iris, 'http://purl.obolibrary.org/obo/GO_0090397'
     end
   end
 
   test 'fetch ols terms with wrong URI' do
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     login_as(person)
     VCR.use_cassette('ols/fetch_obo_bad_term') do
-      get :fetch_ols_terms, params: { source_ontology_id: 'ro',
+      get :fetch_ols_terms, params: { source_ontology_id: 'go',
                                       root_uri: 'http://purl.obolibrary.org/obo/banana',
                                       include_root_term: '1' }, format: :json
 
@@ -319,15 +317,15 @@ class SampleControlledVocabsControllerTest < ActionController::TestCase
   end
 
   test 'can access typeahead with samples disabled' do
-    person = Factory(:person)
+    person = FactoryBot.create(:person)
     login_as(person)
-    scv = Factory(:topics_controlled_vocab)
+    scv = FactoryBot.create(:topics_controlled_vocab)
     with_config_value(:samples_enabled, false) do
-      get :typeahead, params: { format: :json, query: 'sam', scv_id:scv.id }
+      get :typeahead, params: { format: :json, q: 'sam', scv_id:scv.id }
       assert_response :success
-      res = JSON.parse(response.body)
+      res = JSON.parse(response.body)['results']
       assert_equal 1, res.length
-      assert_equal 'Sample collections', res.first['name']
+      assert_equal 'Sample collections', res.first['text']
     end
   end
 end

@@ -51,9 +51,9 @@
 
 		<%= folding_panel(t(:sop).pluralize) do %>
 			<p class="help-block">The following <%= t(:sop).pluralize %> are associated with this <%= t(:study) %>:</p>
-			
+
       <%= study_fields.fancy_multiselect :sops, { other_projects_checkbox: true, name: "isa_study[study][sop_ids]" } %>
-     
+
 		<% end %>
 
     <%= folding_panel("Define #{t(:sample_type)} for Sample") do %>
