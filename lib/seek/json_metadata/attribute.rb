@@ -16,7 +16,7 @@ module Seek
         # validates that the attribute type is SeekSample if linked_sample_type is set, and vice-versa
         validate :linked_sample_type_and_attribute_type_consistency
 
-        delegate :controlled_vocab?, :seek_cv_list?, :seek_sample?, :seek_sample_multi?, :seek_strain?, :seek_resource?, :linked_custom_metadata?, to: :sample_attribute_type, allow_nil: true
+        delegate :controlled_vocab?, :seek_cv_list?, :seek_sample?, :seek_sample_multi?, :seek_strain?, :seek_resource?, :linked_custom_metadata?,:linked_custom_metadata_multi?, to: :sample_attribute_type, allow_nil: true
       end
 
       # checks whether the value is blank against the attribute type and base type
@@ -45,7 +45,10 @@ module Seek
       end
 
       def pre_process_value(value)
-        sample_attribute_type.pre_process_value(value, controlled_vocab: sample_controlled_vocab, linked_sample_type: linked_sample_type)
+        sample_attribute_type.pre_process_value(value,
+                                                controlled_vocab: sample_controlled_vocab,
+                                                linked_custom_metadata_type: linked_custom_metadata_type,
+                                                linked_sample_type: linked_sample_type)
       end
 
       private
@@ -74,8 +77,8 @@ module Seek
         end
         if seek_sample? && linked_sample_type.nil?
           errors.add(:seek_sample, 'Linked Sample Type must be set if attribute type is Registered Sample')
-        elsif seek_sample_multi? && linked_sample_type.nil? 
-          errors.add(:seek_sample_multi, 'Linked Sample Type must be set if attribute type is Registered Sample (multiple)')
+        elsif seek_sample_multi? && linked_sample_type.nil?
+          errors.add(:seek_sample_multi, 'Linked Sample Type must be set if attribute type is Registered Sample List')
         end
       end
     end

@@ -21,7 +21,6 @@
 //= require typeahead.js.js
 //= require bootstrap-tagsinput
 //= require bootstrap-multiselect
-//= require tags_input
 //= require objects_input
 //= require handlebars.runtime
 //= require handlebars_helpers
@@ -57,7 +56,7 @@
 //= require calendar
 //= require inplace
 //= require strain
-//= require publishing
+//= require checkbox
 //= require cytoscape.js-2.5.0/cytoscape
 //= require cytoscape_isa_graph
 //= require bives

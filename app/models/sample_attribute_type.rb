@@ -1,10 +1,10 @@
 class SampleAttributeType < ApplicationRecord
-  # attr_accessible :base_type, :regexp, :title, :placeholder, :description, :resolution
 
   validates :title, :base_type, :regexp, presence: true
   validate :validate_allowed_type, :validate_regular_expression, :validate_resolution
 
   has_many :sample_attributes, inverse_of: :sample_attribute_type
+  has_many :isa_template_attributes, class_name: 'TemplateAttribute', inverse_of: :sample_attribute_type
   has_many :custom_metadata_attributes, inverse_of: :sample_attribute_type
 
   before_save :set_defaults_attributes
@@ -74,7 +74,7 @@ class SampleAttributeType < ApplicationRecord
   end
 
   def controlled_vocab?
-    base_type == Seek::Samples::BaseType::CV
+    [Seek::Samples::BaseType::CV, Seek::Samples::BaseType::CV_LIST].include?(base_type)
   end
 
   def seek_cv_list?
@@ -87,6 +87,10 @@ class SampleAttributeType < ApplicationRecord
 
   def linked_custom_metadata?
     base_type == Seek::Samples::BaseType::LINKED_CUSTOM_METADATA
+  end
+
+  def linked_custom_metadata_multi?
+    base_type == Seek::Samples::BaseType::LINKED_CUSTOM_METADATA_MULTI
   end
 
   def seek_sample?
@@ -103,10 +107,6 @@ class SampleAttributeType < ApplicationRecord
 
   def seek_data_file?
     base_type == Seek::Samples::BaseType::SEEK_DATA_FILE
-  end
-
-  def ontology?
-    controlled_vocab? && title == 'Ontology'
   end
 
   def base_type_handler(additional_options = {})

@@ -13,6 +13,7 @@ class SamplesController < ApplicationController
   before_action :auth_to_create, only: %i[new create batch_create]
 
   include Seek::IsaGraphExtensions
+  include Seek::Publishing::PublishingCommon
 
   def index
     # There must be better ways of coding this
@@ -197,16 +198,17 @@ class SamplesController < ApplicationController
   end
 
   def typeahead
+    query = params[:q] || ''
     sample_type = SampleType.find(params[:linked_sample_type_id])
     results = sample_type.samples.where("LOWER(title) like :query",
-              query: "%#{params[:query].downcase}%").limit(params[:limit] || 100)
+              query: "%#{query.downcase}%").limit(params[:limit] || 100).authorized_for(:view)
     items = results.map do |sa|
       { id: sa.id,
-        name: sa.title }
+        text: sa.title }
     end
 
     respond_to do |format|
-      format.json { render json: items.to_json }
+      format.json { render json: { results: items}.to_json }
     end
   end
 
@@ -264,11 +266,11 @@ class SamplesController < ApplicationController
 
     if sample_type
       sample_type.sample_attributes.each do |attr|
-        if attr.sample_attribute_type.base_type == Seek::Samples::BaseType::CV_LIST
-          sample_type_param_keys << { attr.title=>[]}
+        if attr.sample_attribute_type.controlled_vocab? || attr.sample_attribute_type.seek_sample_multi? || attr.sample_attribute_type.seek_sample?
+          sample_type_param_keys << { attr.title => [] }
           sample_type_param_keys << attr.title.to_sym
-          else
-            sample_type_param_keys << attr.title.to_sym
+        else
+          sample_type_param_keys << attr.title.to_sym
         end
       end
     end

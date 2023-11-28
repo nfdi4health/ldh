@@ -66,7 +66,7 @@ module SampleTypesHelper
     person_sample_types = sample_types.select { |type| (type.projects & projects).any? }
     other_sample_types = sample_types - person_sample_types
     grouped_options = [["Sample types from your #{t('project').pluralize}", person_sample_types.collect { |type| [type.title, type.id] }]]
-    grouped_options << ["Sample types form other #{t('project').pluralize}", other_sample_types.collect { |type| [type.title, type.id] }]
+    grouped_options << ["Sample types from other #{t('project').pluralize}", other_sample_types.collect { |type| [type.title, type.id] }]
   end
 
   def sample_type_tags_list(sample_type)
@@ -91,7 +91,7 @@ module SampleTypesHelper
   private
 
   def displayed_sample_attribute_types
-    SampleAttributeType.all.select{|x|!x.linked_custom_metadata?}
+    SampleAttributeType.all.reject{ |x|x.linked_custom_metadata? || x.linked_custom_metadata_multi? }
   end
 
   def attribute_type_link(sample_type_attribute)

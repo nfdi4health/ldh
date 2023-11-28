@@ -109,15 +109,13 @@ module SharingPermissionsHelper
     parent_node
   end
 
-
-  def add_asset_permission_nodes (parent_node)
-
+  def add_asset_permission_nodes(parent_node)
     asset_type = parent_node["id"].split("-")[0]
     asset_id = parent_node["id"].split("-")[1].to_i
 
     # get asset instance
-    asset =  asset_type.camelize.constantize.find(asset_id)
-    parent_node["text"] = "#{asset.title}  #{icon_link_to("", "new_window", asset , options = {target:'blank',class:'asset-icon',:onclick => 'window.open(this.href, "_blank");'})}"
+    asset = safe_class_lookup(asset_type.camelize).find(asset_id)
+    parent_node["text"] = "#{h(asset.title)}  #{icon_link_to("", "new_window", asset , options = {target:'blank',class:'asset-icon',:onclick => 'window.open(this.href, "_blank");'})}"
 
     permissions_array = get_permission(asset)
     parent_node["children"] = permissions_array + parent_node["children"]
@@ -144,7 +142,7 @@ module SharingPermissionsHelper
           a_attr: {class:"asset-node"},
           children: [] ,
           icon: asset_path(resource_avatar_path(item) || icon_filename_for_key("#{item.class.name.downcase}_avatar")),
-          text: "#{item.title}  #{icon_link_to("", "new_window", item , options = {target:'blank',class:'asset-icon',:onclick => 'window.open(this.href, "_blank");'})}"
+          text: "#{h(item.title)}  #{icon_link_to("", "new_window", item , options = {target:'blank',class:'asset-icon',:onclick => 'window.open(this.href, "_blank");'})}"
       }
 
       permissions_array = get_permission(item)

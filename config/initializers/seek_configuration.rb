@@ -243,6 +243,7 @@ def load_seek_config_defaults!
   Seek::Config.default :openbis_check_new_arrivals, true
 
   Seek::Config.default :default_license, 'CC-BY-4.0'
+  Seek::Config.default :metadata_license, 'CC-BY-4.0'
 
   Seek::Config.default :nels_api_url, 'https://test-fe.cbu.uib.no/nels-api'
   Seek::Config.default :nels_oauth_url, 'https://test-fe.cbu.uib.no/oauth2'
@@ -256,6 +257,7 @@ def load_seek_config_defaults!
 
   Seek::Config.default :life_monitor_enabled, false
   Seek::Config.default :life_monitor_url, 'https://api.lifemonitor.eu/'
+  Seek::Config.default :life_monitor_ui_url, 'https://app.lifemonitor.eu/'
   Seek::Config.default :git_support_enabled, false
   Seek::Config.default :bio_tools_enabled, false
 
