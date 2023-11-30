@@ -354,7 +354,7 @@ c) by what mechanism.', label: 'Criteria for the data access')
   unless CustomMetadataType.where(title:'Design_groupsOfDiseases_Investigation', supported_type:'CustomMetadata').any?
     cmt = CustomMetadataType.new(title: 'Design_groupsOfDiseases_Investigation', supported_type:'CustomMetadata')
     cmt.custom_metadata_attributes << CustomMetadataAttribute.new(title: 'Design_groupsOfDiseases_generally_Investigation', sample_attribute_type: @cv_list_type, sample_controlled_vocab:Design_groupsOfDiseases_generally_Investigation_cv, description:'Groups of diseases or conditions on which the data were collected in the Investigation.', label:'Which groups of diseases or conditions were the data collected on?')
-    cmt.custom_metadata_attributes << CustomMetadataAttribute.new(title: 'Design_groupsOfDiseases_conditions_Investigation', sample_attribute_type: @cv_type, sample_controlled_vocab:Design_groupsOfDiseases_conditions_Investigation_cv, description:'Other diseases or conditions on which the data were collected in the Investigation.', label:'On which other diseases or conditions were the data collected?')
+    cmt.custom_metadata_attributes << CustomMetadataAttribute.new(title: 'Design_groupsOfDiseases_conditions_Investigation', sample_attribute_type: @string_typ, sample_controlled_vocab:nil, description:'Other diseases or conditions on which the data were collected in the Investigation.', label:'On which other diseases or conditions were the data collected?')
     cmt.save!
   end
 
