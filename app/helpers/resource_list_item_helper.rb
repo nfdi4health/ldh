@@ -96,12 +96,24 @@ module ResourceListItemHelper
     list_item_simple_list(resource.annotations.collect(&:value), 'Tags') { |i| link_for_ann(i) }
   end
 
-  def list_item_simple_list(items, attribute, hide_if_blank=false)
+  def list_item_simple_list(items, attribute, hide_if_blank=false, ul=false)
     return '' if hide_if_blank && items.blank?
     html = "<p class=\"list_item_attribute\"><b>#{attribute}:</b> "
     if items.empty?
       html << "<span class='none_text'>Not specified</span>"
     else
+      if (ul)
+        html << "<ul>"
+        items.each_with_index do |i, idx|
+          value = if block_given?
+                    yield(i)
+                  else
+                    (link_to get_object_title(i), show_resource_path(i))
+                  end
+          html << "<li>" << value << "</li>"
+        end
+        html << "</ul>"
+        else
       items.each_with_index do |i, idx|
         value = if block_given?
                   yield(i)
@@ -110,7 +122,8 @@ module ResourceListItemHelper
                 end
         html << value + (idx == (items.length - 1) ? '' : ', ')
       end
-    end
+      end
+      end
     html += '</p>'
     html.html_safe
   end
