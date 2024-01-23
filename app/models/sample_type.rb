@@ -60,6 +60,10 @@ class SampleType < ApplicationRecord
 
   has_annotation_type :sample_type_tag, method_name: :tags
 
+  def is_isa_json_compliant?
+    studies.any? || assays.any?
+  end
+
   def validate_value?(attribute_name, value)
     attribute = sample_attributes.detect { |attr| attr.title == attribute_name }
     raise UnknownAttributeException, "Unknown attribute #{attribute_name}" unless attribute
@@ -124,7 +128,7 @@ class SampleType < ApplicationRecord
   end
 
   def can_view?(user = User.current_user, referring_sample = nil, view_in_single_page = false)
-    return false if Seek::Config.project_single_page_advanced_enabled && template_id.present? && !view_in_single_page
+    return false if Seek::Config.isa_json_compliance_enabled && template_id.present? && !view_in_single_page
 
     project_membership = user&.person && (user.person.projects & projects).any?
     is_creator = creators.include?(user&.person)

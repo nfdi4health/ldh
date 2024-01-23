@@ -8,9 +8,14 @@ namespace :seek do
   # these are the tasks required for this version upgrade
   task upgrade_version_tasks: %i[
     environment
+    decouple_extracted_samples_policies
+    decouple_extracted_samples_projects
+    link_sample_datafile_attributes
     strip_sample_attribute_pids
     rename_registered_sample_multiple_attribute_type
     remove_ontology_attribute_type
+    db:seed:007_sample_attribute_types
+    recognise_isa_json_compliant_items
   ]
 
   # these are the tasks that are executes for each upgrade as standard, and rarely change
@@ -92,6 +97,83 @@ namespace :seek do
         puts '..... Target Controlled Vocabulary attribute type not found'
       end
     end
+  end
+
+  task(decouple_extracted_samples_policies: [:environment]) do
+    puts '..... creating independent policies for extracted samples (this can take a while if there are many samples) ...'
+    affected_samples = []
+    disable_authorization_checks do
+      Sample.includes(:originating_data_file).find_each do |sample|
+        # check if the sample was extracted from a datafile and their policies are linked
+        if sample.extracted? && sample.policy_id == sample.originating_data_file&.policy_id
+          policy = sample.policy.deep_copy
+          policy.save
+          sample.update_column(:policy_id, policy.id)
+          putc('.')
+          affected_samples << sample
+        end
+      end
+      #won't have been queued, as the policy has no associated assets yet when saved
+      AuthLookupUpdateQueue.enqueue(affected_samples) if affected_samples.any?
+    end
+    puts "..... finished creating independent policies of #{affected_samples.count} extracted samples"
+  end
+
+  task(decouple_extracted_samples_projects: [:environment]) do
+    puts '..... copying project ids for extracted samples...'
+    decoupled = 0
+    hash_array = []
+    disable_authorization_checks do
+      Sample.find_each do |sample|
+        # check if the sample was extracted from a datafile and their projects are linked
+        if sample.extracted? && sample.project_ids.empty?
+          sample.originating_data_file.project_ids.each do |project_id|
+            hash_array << { project_id: project_id, sample_id: sample.id }
+          end
+          decoupled += 1
+        end
+      end
+      unless hash_array.empty?
+        class ProjectsSample < ActiveRecord::Base; end;
+        ProjectsSample.insert_all(hash_array)
+      end
+    end
+    puts " ... finished copying project ids of #{decoupled.to_s} extracted samples"
+  end
+
+  task(link_sample_datafile_attributes: [:environment]) do
+    puts '... updating sample_resource_links for samples with data_file attributes...'
+    samples_updated = 0
+    disable_authorization_checks do
+      df_attrs = SampleAttribute.joins(:sample_attribute_type).where('sample_attribute_types.base_type' => Seek::Samples::BaseType::SEEK_DATA_FILE).pluck(:id)
+      samples = Sample.joins(sample_type: :sample_attributes).where('sample_attributes.id' => df_attrs)
+      samples.each do |sample|
+        if sample.sample_resource_links.where(resource_type: 'DataFile').empty?
+          sample.send(:update_sample_resource_links)
+          samples_updated += 1
+        end
+      end
+    end
+    puts " ... finished updating sample_resource_links of #{samples_updated.to_s} samples with data_file attributes"
+  end
+
+  task(recognise_isa_json_compliant_items: [:environment]) do
+    puts '... searching for ISA compliant investigations'
+    investigations_updated = 0
+    disable_authorization_checks do
+      investigations_to_update = Study.joins(:investigation)
+                                      .where('investigations.is_isa_json_compliant = ?', false)
+                                      .select { |study| study.sample_types.any? }
+                                      .map(&:investigation)
+                                      .compact
+                                      .uniq
+
+      investigations_to_update.each do |inv|
+        inv.update_column(:is_isa_json_compliant, true)
+        investigations_updated += 1
+      end
+    end
+    puts "...Updated #{investigations_updated.to_s} investigations"
   end
 
   private
