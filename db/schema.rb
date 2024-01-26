@@ -430,6 +430,13 @@ ActiveRecord::Schema.define(version: 2023_12_18_133053) do
     t.integer "event_id"
   end
 
+  create_table "data_files_human_diseases", id: false, force: :cascade do |t|
+    t.integer "human_disease_id"
+    t.integer "data_file_id"
+    t.index ["data_file_id"], name: "index_diseases_data_files_on_data_file_id"
+    t.index ["human_disease_id", "data_file_id"], name: "index_diseases_data_files_on_disease_id_and_data_file_id"
+  end
+
   create_table "data_files_projects", id: false, force: :cascade do |t|
     t.integer "project_id"
     t.integer "data_file_id"

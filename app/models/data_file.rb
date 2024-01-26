@@ -42,8 +42,10 @@ class DataFile < ApplicationRecord
       joins: [:assays]
   )
 
-  explicit_versioning(version_column: 'version', sync_ignore_columns: ['doi', 'file_template_id']) do
+  has_and_belongs_to_many :human_diseases
+  has_filter :human_disease
 
+  explicit_versioning(version_column: 'version', sync_ignore_columns: ['doi', 'file_template_id']) do
     acts_as_doi_mintable(proxy: :parent, type: 'Dataset', general_type: 'Dataset')
     acts_as_versioned_resource
     acts_as_favouritable
@@ -227,6 +229,10 @@ class DataFile < ApplicationRecord
     else
       return assay, Set.new
     end
+  end
+
+  def human_disease_terms
+    human_diseases.collect(&:searchable_terms).flatten
   end
 
   has_task :sample_extraction

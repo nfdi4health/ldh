@@ -122,6 +122,8 @@ class AdminController < ApplicationController
     Seek::Config.samples_enabled = string_to_boolean params[:samples_enabled]
     Seek::Config.sops_enabled = string_to_boolean params[:sops_enabled]
     Seek::Config.workflows_enabled = string_to_boolean params[:workflows_enabled]
+    Seek::Config.human_diseases_enabled = string_to_boolean params[:human_diseases_enabled]
+    Seek::Config.human_diseases_plot_enabled = string_to_boolean params[:human_diseases_plot_enabled]
 
     Seek::Config.require_cookie_consent = string_to_boolean params[:require_cookie_consent]
 

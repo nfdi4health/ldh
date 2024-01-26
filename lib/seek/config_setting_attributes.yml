@@ -53,6 +53,7 @@ modelling_analysis_enabled:
 allow_publications_fulltext:
 allow_edit_of_registered_publ:
 human_diseases_enabled:
+human_diseases_plot_enabled:
 jerm_enabled:
 email_enabled:
 jws_enabled:

@@ -25,9 +25,13 @@
       </label>
     </div>
 
-    <div class="<%= "hidden" if displaying_single_page? %>"> 
+    <div class="<%= "hidden" if displaying_single_page? %>">
           <%= render :partial => 'projects/project_selector', locals: { resource: @data_file } -%>
-    </div> 
+    </div> <% if Seek::Config.human_diseases_enabled %>
+      <div class="form-group">
+        <%= f.fancy_multiselect :human_diseases, { possibilities: HumanDisease.order(:title).all, with_new_link: true, hidden: false } %>
+      </div>
+    <% end %>
     <%= render :partial => 'assets/select_tags', locals: {collapsed: true} if DataFile.is_taggable? %>
     <%if(is_modal)%>
       <a class=" btn btn-default" onClick="location.reload();">Cancel</a>
