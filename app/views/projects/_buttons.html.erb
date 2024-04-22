@@ -59,8 +59,24 @@
     <% end -%>
 
     <% if Seek::Config.isa_enabled %>
+
+
       <%= order_icon(item,current_user, order_investigations_project_path(item), item.investigations, 'investigation') %>
     <% end %>
+    <% if Seek::Config.n4h_enabled %>
+    <li><%= image_tag_for_key('publish', publish_to_csh_project_path(item), "Publish to NFDI4Health GCHSH", nil, "Publish to NFDI4Health GCHSH") -%></li>
+    <% else %>
+      <% explanation = "The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>
+      <li>
+      <span class='disabled_icon disabled' onclick='alert("<%= explanation-%>")' data-tooltip='<%= tooltip(explanation) -%>'>
+          <%= image('publish', {:alt=>"Publish", :class=>"disabled"}) %> Publish to NFDI4Health GCHSH
+      </span>
+      </li>
+    <% end %>
+    <li><%= image_tag_for_key('manage', edit_project_path(item), "Manage #{t('project')}", nil, "Manage #{t('project')}") -%></li>
+
+
+
 
     <% if admin_logged_in? || item.can_manage? -%>
       <%= delete_icon(item,current_user,"Any members will also be removed from the #{t('project')}, are you sure?") %>

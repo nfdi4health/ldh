@@ -342,6 +342,7 @@ SEEK::Application.routes.draw do
       post :request_membership
       get :overview
       get :order_investigations
+      get :publish_to_csh
       get :administer_join_request
       post :respond_join_request
       get :guided_join

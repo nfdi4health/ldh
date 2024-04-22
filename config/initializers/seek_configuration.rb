@@ -258,7 +258,8 @@ def load_seek_config_defaults!
   Seek::Config.default :life_monitor_ui_url, 'https://app.lifemonitor.eu/'
   Seek::Config.default :git_support_enabled, false
   Seek::Config.default :bio_tools_enabled, false
-
+  # NFDI4Health publish
+  Seek::Config.default :n4h_url, 'https://csh.nfdi4health.de/'
   load_seek_testing_defaults! if Rails.env.test?
 end
 

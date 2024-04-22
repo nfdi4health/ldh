@@ -168,6 +168,13 @@ class AdminController < ApplicationController
 
     Seek::Config.bio_tools_enabled = string_to_boolean(params[:bio_tools_enabled])
 
+    Seek::Config.n4h_enabled = string_to_boolean params[:n4h_enabled]
+    Seek::Config.n4h_url = params[:n4h_url]
+    Seek::Config.n4h_username = params[:n4h_username]
+    Seek::Config.n4h_authorization_url = params[:n4h_authorization_url]
+    Seek::Config.n4h_password = params[:n4h_password]
+    Seek::Config.n4h_publish_url = params[:n4h_publish_url]
+
     time_lock_is_integer = true
     if params.key?(:time_lock_doi_for)
       time_lock_doi_for = params[:time_lock_doi_for]

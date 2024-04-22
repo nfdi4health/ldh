@@ -2,6 +2,8 @@ require 'seek/custom_exception'
 require 'zip'
 require 'securerandom'
 require 'json'
+require 'nfdi4health/csh_client'
+require 'seek/util'
 
 class ProjectsController < ApplicationController
   include Seek::IndexPager
@@ -418,7 +420,6 @@ class ProjectsController < ApplicationController
       format.html { render template: 'projects/asset_report/report' }
     end
   end
-
   
   # GET /projects/1
   def show
@@ -535,6 +536,61 @@ class ProjectsController < ApplicationController
     @project = Project.find(params[:id])
     respond_to do |format|
       format.html
+    end
+  end
+
+  def publish_to_csh
+    @project = Project.find(params[:id])
+    data_project = render json: @project, include: [params[:include]]
+    data_project_parsed = JSON.parse(data_project)
+
+    password=Seek::Config.n4h_password
+    url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
+    authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
+    username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
+    url_publish=Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url#"https://csh.nfdi4health.de/api/resource/"
+    endpoints = Nfdi4Health::Client.new(authorization_url)
+    endpoints.send_transforming_api(data_project_parsed.to_json,url)
+
+    project_transformed_hash=JSON.parse(JSON.parse(endpoints.to_json)['transformed'])
+    project_transformed_update_hash = project_transformed_hash#{data: project_transformed_hash }
+    current_person_json=current_person.to_json
+    current_person_json_parsed=JSON.parse(current_person_json)
+    selected_keys = ["first_name", "last_name","email"]
+    current_person_json_parsed_filtered = current_person_json_parsed.select { |key, _| selected_keys.include?(key) }
+    sender_part = {sender: current_person_json_parsed_filtered }
+    sender_project_merged=sender_part.merge(project_transformed_update_hash)
+
+
+    endpoints.get_token(authorization_url,username,password)
+    token_respond_hash=JSON.parse(endpoints.to_json)
+    access_token=token_respond_hash['token']
+    access_token_hash=JSON.parse(access_token)
+    one_time_token=access_token_hash['access_token']
+    endpoints.publish_csh(sender_project_merged.to_json,url_publish,one_time_token)
+    identifier=JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
+
+
+
+    # adding the {sender: ...} to endpoint
+    # getting the token with csh_username, csh_password from auth_url
+    #
+
+    # with token from csh
+
+    #respond_to do |format|
+      #flash[:notice] = "#{t('project')} was successfully published."
+
+
+    #respond_to do |format|
+    #  flash[:notice] = "#{t('project')} was successfully published."
+    #  format.html { redirect_to(@project) }
+    #end
+    respond_to do |format|
+      flash[:notice] = "#{t('project')} was successfully published."
+      format.html { render(params[:only_content] ? { layout: false } : {})} # show.html.erb
+      format.rdf { render template: 'rdf/show' }
+      format.json { render json: @project, include: [params[:include]] }
     end
   end
 
@@ -875,7 +931,6 @@ class ProjectsController < ApplicationController
       format.json { render json: {results: items}.to_json }
     end
   end
-
   private
 
   def project_role_params
@@ -931,7 +986,6 @@ class ProjectsController < ApplicationController
     end
     return true
   end
-
 
   def add_and_remove_members_and_institutions
     groups_to_remove = params[:group_memberships_to_remove] || []

@@ -257,3 +257,9 @@ regular_job_offset:
   convert: :to_i
 auto_activate_programmes:
 auto_activate_site_managed_projects:
+n4h_enabled:
+n4h_username:
+n4h_password:
+n4h_url:
+n4h_authorization_url:
+n4h_publish_url:
