@@ -9,6 +9,7 @@ module Nfdi4Health
 
 
     end
+
     def publish_csh(project_transformed,url,token)
       content_length = project_transformed.bytesize
       headers = { content_type: 'application/json',Content_Length: content_length  ,Host: 'csh.nfdi4health.de', Authorization: "Bearer " + token
@@ -16,10 +17,15 @@ module Nfdi4Health
 
       @endpoint = RestClient::Request.execute(method: :post, url: url, payload: project_transformed, headers: headers)
     end
+
     def send_transforming_api(project,url)
-      @transformed = RestClient::Request.execute(method: :post, url: url,payload: project, headers: { content_type: :json, accept: :json })
+      #raise project.inspect
+      @transformed = RestClient::Request.execute(method: :post, url: url,payload: project, headers: { content_type: :json, accept: :json }).body
       #@endpoint['publish'].post(project, content_type: 'application/json')
     end
+
+
+
     def get_token(url,user,password)
       headers = {
         content_type: 'application/x-www-form-urlencoded'
