@@ -608,9 +608,6 @@ class ProjectsController < ApplicationController
     endpoints.publish_csh(sender_project_merged.to_json,url_publish,one_time_token)
     identifier=JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
 
-    #@project.extended_metadata.data.update(Resource_identifier_Project: identifier)
-    #@project.extended_metadata.data.set_attribute_value(:Resource_identifier_Project, identifier)
-
     flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
       #@project.reload
