@@ -3,7 +3,7 @@ require 'rest-client'
 module Nfdi4Health
 
   class Client
-
+    attr_accessor :transformed
     def initialize(endpoint)
       #@endpoint = RestClient::Resource.new(endpoint)
 

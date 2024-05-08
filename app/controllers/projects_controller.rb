@@ -588,7 +588,7 @@ class ProjectsController < ApplicationController
     url_publish=Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url#"https://csh.nfdi4health.de/api/resource/"
     endpoints = Nfdi4Health::Client.new(authorization_url)
     endpoints.send_transforming_api(user_attributes_selected_json_parse.to_json,url)
-    aaa
+
 
     project_transformed_hash=JSON.parse(JSON.parse(endpoints.to_json)['transformed'])
     project_transformed_update_hash = project_transformed_hash#{data: project_transformed_hash }
@@ -609,14 +609,6 @@ class ProjectsController < ApplicationController
 
     #@project.extended_metadata.data.update(Resource_identifier_Project: identifier)
     #@project.extended_metadata.data.set_attribute_value(:Resource_identifier_Project, identifier)
-
-
-
-
-
-
-
-
 
     flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
