@@ -1,11 +1,11 @@
 <% if Seek::Config.project_single_page_enabled %>
   <% if !displaying_single_page? %>
-    <span>
-      <%= button_link_to("Single Page", 'sop', single_page_path(item.id)) -%>
+    <span title="<%= t("info_text.single_page") %>">
+      <%= button_link_to(t("single_page"), 'sop', single_page_path(item.id)) -%>
     </span>
   <% else %>
-    <span>
-      <%= button_link_to("Default View", 'sop', project_path(item.id)) -%>
+    <span title="<%= t('info_text.default_view') %>">
+      <%= button_link_to(t('default_view'), 'sop', project_path(item.id)) -%>
     </span>
   <% end %>
 <% end -%>
@@ -59,8 +59,24 @@
     <% end -%>
 
     <% if Seek::Config.isa_enabled %>
+
+
       <%= order_icon(item,current_user, order_investigations_project_path(item), item.investigations, 'investigation') %>
     <% end %>
+    <% if Seek::Config.n4h_enabled %>
+    <li><%= image_tag_for_key('publish', publish_to_csh_project_path(item), "Publish to NFDI4Health GCHSH", nil, "Publish to NFDI4Health GCHSH") -%></li>
+    <% else %>
+      <% explanation = "The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>
+      <li>
+      <span class='disabled_icon disabled' onclick='alert("<%= explanation-%>")' data-tooltip='<%= tooltip(explanation) -%>'>
+          <%= image('publish', {:alt=>"Publish", :class=>"disabled"}) %> Publish to NFDI4Health GCHSH
+      </span>
+      </li>
+    <% end %>
+
+
+
+
 
     <% if admin_logged_in? || item.can_manage? -%>
       <%= delete_icon(item,current_user,"Any members will also be removed from the #{t('project')}, are you sure?") %>

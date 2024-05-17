@@ -1,0 +1,18 @@
+<%= admin_checkbox_setting(:n4h_enabled, 1, Seek::Config.n4h_enabled,
+                           "NFDI4Health publish enabled", "Allows you to publish the project data to the NFDI4Health Central Search Hub (CSH).",
+                           :onchange=>toggle_appear_javascript('n4h_block')) %>
+<div id="n4h_block" class="additional_settings" style="<%= show_or_hide_block Seek::Config.n4h_enabled -%>">
+
+  <%= admin_text_setting(:n4h_url, Seek::Config.n4h_url,
+                         'NFDI4Health URL', "The URL transforming for the NFDI4Health publish rest service.") %>
+  <%= admin_text_setting(:n4h_username, Seek::Config.n4h_username,
+                         'CSH token username', 'The username for generating CSH token.') %>
+  <%= admin_password_setting(:n4h_password, Seek::Config.n4h_password,
+                             'CSH token Password', 'The password for generating CSH token.') %>
+  <%= admin_text_setting(:n4h_authorization_url, Seek::Config.n4h_authorization_url,
+                             'CSH request URL', 'The CSH request URL for requesting the token.') %>
+  <%= admin_text_setting(:n4h_publish_url, Seek::Config.n4h_publish_url,
+                         'NFDI4Health Publish URL', 'The Publish URL NFDI4Health provided you with for publishing to CSH.') %>
+
+
+</div>

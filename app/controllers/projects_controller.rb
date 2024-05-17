@@ -2,12 +2,16 @@ require 'seek/custom_exception'
 require 'zip'
 require 'securerandom'
 require 'json'
+require 'nfdi4health/csh_client'
+require 'seek/util'
+
 
 class ProjectsController < ApplicationController
   include Seek::IndexPager
   include CommonSweepers
   include Seek::DestroyHandling
   include Seek::Projects::Population
+  include Seek::AnnotationCommon
 
   before_action :login_required, only: [:guided_join, :guided_create, :guided_import, :request_join, :request_create, :request_import,
                                         :administer_join_request, :respond_join_request,
@@ -34,7 +38,7 @@ class ProjectsController < ApplicationController
   before_action :validate_message_log_for_create, only: [:administer_create_project_request, :respond_create_project_request]
   before_action :validate_message_log_for_import, only: [:administer_import_project_request, :respond_import_project_request]
   before_action :parse_message_log_details, only: [:administer_create_project_request, :administer_import_project_request]
-  before_action :check_message_log_programme_permissions, only: [:administer_create_project_request, :administer_import_project_request, 
+  before_action :check_message_log_programme_permissions, only: [:administer_create_project_request, :administer_import_project_request,
                                                                  :respond_create_project_request, :respond_import_project_request], if: Proc.new{Seek::Config.programmes_enabled}
 
   skip_before_action :project_membership_required
@@ -59,7 +63,7 @@ class ProjectsController < ApplicationController
     @requests = ProjectCreationMessageLog.pending_requests.select do |r|
       r.can_respond_project_creation_request?(current_user)
     end
-        
+
     respond_to do |format|
       format.html
     end
@@ -419,7 +423,6 @@ class ProjectsController < ApplicationController
     end
   end
 
-  
   # GET /projects/1
   def show
     respond_to do |format|
@@ -538,6 +541,84 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def publish_to_csh
+    @project = Project.find(params[:id])
+    data = @project.to_json
+    #host = Seek::Config.site_base_host
+    #url = host + '/projects'
+    project_attributes_json= ProjectSerializer.new(@project).to_json #Project.find(params[:id])
+
+    @user_current=current_person
+    user_json=@user_current.to_json
+    project_attributes_json_parse=JSON.parse(project_attributes_json)
+
+    meta_data=JSON.parse(@project.to_json(only:[:created_at,:updated_at, :uuid]))
+    meta_data=meta_data.transform_keys { |key| key == "created_at" ? "created" : key }
+    meta_data=meta_data.transform_keys { |key| key == "updated_at" ? "modified" : key }
+    meta_data['api_version'] = ActiveModel::Serializer.config.api_version.to_s
+    meta_data['base_url'] = Seek::Config.site_base_host
+    meta_data = {meta: meta_data}
+
+    selected_keys = ["project_administrators", "pals", "asset_housekeepers", "asset_gatekeepers", "organisms",
+                     "human_diseases", "people", "institutions", "programmes", "investigations", "studies",
+                     "assays", "data_files", "project_relationships_json_files", "file_templates", "placeholders",
+                     "models", "sops", "publications", "presentations", "events", "documents", "workflows", "collections"]
+    project_relationships_json_parse = project_attributes_json_parse.select { |key, _| selected_keys.include?(key) }
+    project_relationships_json = {relationships: project_relationships_json_parse}
+
+    for item in selected_keys do
+      project_attributes_json_parse.delete(item)
+    end
+    project_attributes_json = {attributes: project_attributes_json_parse}
+
+    attributes_selected_json_parse=project_attributes_json.merge(project_relationships_json)
+    attributes_selected_json_parse=attributes_selected_json_parse.merge(meta_data)
+    attributes_selected_json_parse['id']=@project.id.to_s
+    attributes_selected_json_parse['type']="projects"
+    attributes_selected_json_parse['jsonapi']= { "version" => "1.0" }
+    attributes_selected_json_parse['links']= { "self" => "/projects/"+@project.id.to_s}
+
+    user_attributes_selected_json_parse = {data: attributes_selected_json_parse}
+
+
+
+    password=Seek::Config.n4h_password
+    url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
+    authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
+    username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
+    url_publish=Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url#"https://csh.nfdi4health.de/api/resource/"
+    endpoints = Nfdi4Health::Client.new(authorization_url)
+    endpoints.send_transforming_api(user_attributes_selected_json_parse.to_json,url)
+
+
+    project_transformed_hash=JSON.parse(JSON.parse(endpoints.to_json)['transformed'])
+    project_transformed_update_hash = project_transformed_hash#{data: project_transformed_hash }
+    current_person_json=current_person.to_json
+    current_person_json_parsed=JSON.parse(current_person_json)
+    selected_keys = ["first_name", "last_name","email"]
+    current_person_json_parsed_filtered = current_person_json_parsed.select { |key, _| selected_keys.include?(key) }
+    sender_part = {sender: current_person_json_parsed_filtered }
+    sender_project_merged=sender_part.merge(project_transformed_update_hash)
+
+    endpoints.get_token(authorization_url,username,password)
+    token_respond_hash=JSON.parse(endpoints.to_json)
+    access_token=token_respond_hash['token']
+    access_token_hash=JSON.parse(access_token)
+    one_time_token=access_token_hash['access_token']
+    endpoints.publish_csh(sender_project_merged.to_json,url_publish,one_time_token)
+    identifier=JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
+
+    flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
+    respond_to do |format|
+      #@project.reload
+      #flash[:notice] = "#{t('project')} was successfully published."
+      format.html { redirect_to(@project) }
+      #format.html { render(params[:only_content] ? { layout: false } : {})} # show.html.erb
+      format.rdf { render template: 'rdf/show' }
+      format.json { render json: @project, include: [params[:include]] }
+    end
+  end
+
   # PUT /projects/1   , polymorphic: [:organism]
   def update
     if params[:project]&.[](:ordered_investigation_ids)
@@ -620,7 +701,7 @@ class ProjectsController < ApplicationController
       format.html { redirect_to project_path(@project) }
     end
   end
-  
+
   def admin_members
     respond_with(@project)
   end
@@ -875,7 +956,6 @@ class ProjectsController < ApplicationController
       format.json { render json: {results: items}.to_json }
     end
   end
-
   private
 
   def project_role_params
@@ -931,7 +1011,6 @@ class ProjectsController < ApplicationController
     end
     return true
   end
-
 
   def add_and_remove_members_and_institutions
     groups_to_remove = params[:group_memberships_to_remove] || []
