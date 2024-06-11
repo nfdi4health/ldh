@@ -612,13 +612,12 @@ class ProjectsController < ApplicationController
           format.rdf { render template: 'rdf/show' }
           format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
           end
-      else
+        else
         flash[:error] = "RestClient::ExceptionWithResponse occurred without a response: #{e.message}"
         respond_to do |format|
           format.html { redirect_to(@project) }
           format.rdf { render template: 'rdf/show' }
           format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
-
           end
         end
 
