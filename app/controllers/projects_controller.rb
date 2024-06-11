@@ -541,82 +541,205 @@ class ProjectsController < ApplicationController
   end
 
   def publish_to_csh
+
+
     @project = Project.find(params[:id])
-    data = @project.to_json
+    @project = Project.find(params[:id])
+    #data = @project.to_json
     #host = Seek::Config.site_base_host
     #url = host + '/projects'
-    project_attributes_json= ProjectSerializer.new(@project).to_json #Project.find(params[:id])
+    project_attributes_json = ProjectSerializer.new(@project).to_json #Project.find(params[:id])
 
-    @user_current=current_person
-    user_json=@user_current.to_json
-    project_attributes_json_parse=JSON.parse(project_attributes_json)
+    @user_current = current_person
+    #user_json=@user_current.to_json
+    # Preserve special characters by replacing them with placeholders
+    special_characters = {
+      '\\u0026' => '__AMP__',
+      '\\u003c' => '__LT__',
+      '\\u003e' => '__GT__',
+      '\\u0022' => '__QUOTE__'
+    }
 
-    meta_data=JSON.parse(@project.to_json(only:[:created_at,:updated_at, :uuid]))
-    meta_data=meta_data.transform_keys { |key| key == "created_at" ? "created" : key }
-    meta_data=meta_data.transform_keys { |key| key == "updated_at" ? "modified" : key }
+    # Replace special characters with placeholders
+    special_characters.each do |char, placeholder|
+      project_attributes_json.gsub!(char, placeholder)
+    end
+    project_attributes_json_parse = JSON.parse(project_attributes_json)
+
+    meta_data = JSON.parse(@project.to_json(only:[:created_at,:updated_at, :uuid]))
+    meta_data = meta_data.transform_keys { |key| key == 'created_at' ? 'created' : key }
+    meta_data = meta_data.transform_keys { |key| key == 'updated_at' ? 'modified' : key }
     meta_data['api_version'] = ActiveModel::Serializer.config.api_version.to_s
     meta_data['base_url'] = Seek::Config.site_base_host
     meta_data = {meta: meta_data}
 
-    selected_keys = ["project_administrators", "pals", "asset_housekeepers", "asset_gatekeepers", "organisms",
-                     "human_diseases", "people", "institutions", "programmes", "investigations", "studies",
-                     "assays", "data_files", "project_relationships_json_files", "file_templates", "placeholders",
-                     "models", "sops", "publications", "presentations", "events", "documents", "workflows", "collections"]
+    selected_keys = %w[project_administrators pals asset_housekeepers asset_gatekeepers organisms human_diseases people
+                   institutions programmes investigations studies assays data_files project_relationships_json_files
+                   file_templates placeholders models sops publications presentations events documents workflows
+                   collections]
     project_relationships_json_parse = project_attributes_json_parse.select { |key, _| selected_keys.include?(key) }
     project_relationships_json = {relationships: project_relationships_json_parse}
 
-    for item in selected_keys do
+    selected_keys.each do |item|
       project_attributes_json_parse.delete(item)
     end
     project_attributes_json = {attributes: project_attributes_json_parse}
 
-    attributes_selected_json_parse=project_attributes_json.merge(project_relationships_json)
-    attributes_selected_json_parse=attributes_selected_json_parse.merge(meta_data)
-    attributes_selected_json_parse['id']=@project.id.to_s
-    attributes_selected_json_parse['type']="projects"
-    attributes_selected_json_parse['jsonapi']= { "version" => "1.0" }
-    attributes_selected_json_parse['links']= { "self" => "/projects/"+@project.id.to_s}
+    attributes_selected_json_parse = project_attributes_json.merge(project_relationships_json)
+    attributes_selected_json_parse = attributes_selected_json_parse.merge(meta_data)
+    attributes_selected_json_parse['id'] = @project.id.to_s
+    attributes_selected_json_parse['type'] = 'projects'
+    attributes_selected_json_parse['jsonapi'] = { 'version' => '1.0' }
+    attributes_selected_json_parse['links'] = { 'self' => "/projects/#{@project.id}"}
 
     user_attributes_selected_json_parse = {data: attributes_selected_json_parse}
 
 
 
-    password=Seek::Config.n4h_password
+    password = Seek::Config.n4h_password
     url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
     authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
     username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
-    url_publish=Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url#"https://csh.nfdi4health.de/api/resource/"
-    endpoints = Nfdi4Health::Client.new(authorization_url)
-    endpoints.send_transforming_api(user_attributes_selected_json_parse.to_json,url)
-    aaa
+    url_publish = Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url#"https://csh.nfdi4health.de/api/resource/"
+    begin
+      endpoints = Nfdi4Health::Client.new(authorization_url)
+      endpoints.send_transforming_api(user_attributes_selected_json_parse.to_json, url)
+    rescue RestClient::ExceptionWithResponse => e
+      if e.response
+        flash[:error] = "HTTP Status: #{e.response.code} - #{e.response.body}"
+        respond_to do |format|
+          format.html { redirect_to(@project) }
+          format.rdf { render template: 'rdf/show' }
+          format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+          end
+      else
+        flash[:error] = "RestClient::ExceptionWithResponse occurred without a response: #{e.message}"
+        respond_to do |format|
+          format.html { redirect_to(@project) }
+          format.rdf { render template: 'rdf/show' }
+          format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
 
-    project_transformed_hash=JSON.parse(JSON.parse(endpoints.to_json)['transformed'])
+          end
+        end
+
+      return
+    rescue RestClient::RequestTimeout => e
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError => e
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    # Convert placeholders back to special characters in the final JSON
+    final_json_string = endpoints.to_json
+    special_characters.each do |char, placeholder|
+      final_json_string.gsub!(placeholder, char)
+    end
+
+    project_transformed_hash = JSON.parse(JSON.parse(final_json_string)['transformed'])
+
+
+
     project_transformed_update_hash = project_transformed_hash#{data: project_transformed_hash }
-    current_person_json=current_person.to_json
-    current_person_json_parsed=JSON.parse(current_person_json)
-    selected_keys = ["first_name", "last_name","email"]
+    current_person_json = current_person.to_json
+    current_person_json_parsed = JSON.parse(current_person_json)
+    selected_keys = ['first_name', 'last_name','email']
     current_person_json_parsed_filtered = current_person_json_parsed.select { |key, _| selected_keys.include?(key) }
     sender_part = {sender: current_person_json_parsed_filtered }
-    sender_project_merged=sender_part.merge(project_transformed_update_hash)
-
-    endpoints.get_token(authorization_url,username,password)
-    token_respond_hash=JSON.parse(endpoints.to_json)
-    access_token=token_respond_hash['token']
-    access_token_hash=JSON.parse(access_token)
-    one_time_token=access_token_hash['access_token']
-    endpoints.publish_csh(sender_project_merged.to_json,url_publish,one_time_token)
-    identifier=JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
-
-    #@project.extended_metadata.data.update(Resource_identifier_Project: identifier)
-    #@project.extended_metadata.data.set_attribute_value(:Resource_identifier_Project, identifier)
-
-
-
-
-
-
-
-
+    sender_project_merged = sender_part.merge(project_transformed_update_hash)
+    begin
+      endpoints.get_token(authorization_url,username,password)
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,"get_token")
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = "Request Timeout: The server took too long to respond."
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = "Network Error: Please check your internet connection."
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    token_respond_hash = JSON.parse(endpoints.to_json)
+    access_token = token_respond_hash['token']
+    access_token_hash = JSON.parse(access_token)
+    one_time_token = access_token_hash['access_token']
+    begin
+      endpoints.publish_csh(sender_project_merged.to_json,url_publish,one_time_token)
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,"publish_csh")
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = "Request Timeout: The server took too long to respond."
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = "Network Error: Please check your internet connection."
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    identifier = JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
 
     flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
