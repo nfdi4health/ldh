@@ -541,18 +541,10 @@ class ProjectsController < ApplicationController
   end
 
   def publish_to_csh
-
-
     @project = Project.find(params[:id])
-    @project = Project.find(params[:id])
-    #data = @project.to_json
-    #host = Seek::Config.site_base_host
-    #url = host + '/projects'
-    project_attributes_json = ProjectSerializer.new(@project).to_json #Project.find(params[:id])
+    project_attributes_json = ProjectSerializer.new(@project).to_json
 
     @user_current = current_person
-    #user_json=@user_current.to_json
-    # Preserve special characters by replacing them with placeholders
     special_characters = {
       '\\u0026' => '__AMP__',
       '\\u003c' => '__LT__',
@@ -600,9 +592,9 @@ class ProjectsController < ApplicationController
     url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
     authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
     username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
-    url_publish = Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url#"https://csh.nfdi4health.de/api/resource/"
+    url_publish = Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url
     begin
-      endpoints = Nfdi4Health::Client.new(authorization_url)
+      endpoints = Nfdi4Health::Client.new()
       endpoints.send_transforming_api(user_attributes_selected_json_parse.to_json, url)
     rescue RestClient::ExceptionWithResponse => e
       if e.response

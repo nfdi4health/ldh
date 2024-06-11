@@ -4,14 +4,8 @@ module Nfdi4Health
 
   class Client
     attr_accessor :transformed
-    def initialize(endpoint)
-      #@endpoint = RestClient::Resource.new(endpoint)
-
-
-    end
 
     def publish_csh(project_transformed,url,token)
-      #escaped_string=ERB::Util.html_escape(project_transformed)
       content_length = project_transformed.bytesize
       headers = { content_type: 'application/json',Content_Length: content_length  ,Host: 'csh.nfdi4health.de', Authorization: 'Bearer ' + token
       }
@@ -20,10 +14,7 @@ module Nfdi4Health
     end
 
     def send_transforming_api(project,url)
-      #raise project.inspect
-      #escaped_string=ERB::Util.html_escape(project)
       @transformed = RestClient::Request.execute(method: :post, url: url,payload: project, headers: { content_type: :json, accept: :json }).body
-      #@endpoint['publish'].post(project, content_type: 'application/json')
     end
 
 
