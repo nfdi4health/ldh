@@ -42,49 +42,49 @@ module Nfdi4Health
       when 'get_token'
         case e.response.code
         when 400
-          'Bad Request: The server could not understand the request.'
+          'Token:CODE400- Bad Request: The server could not understand the request.'
         when 401
-          'Unauthorized: Access is denied due to invalid credentials.'
+          'Token:CODE401- Unauthorized: Access is denied due to invalid credentials.'
         when 403
-          'Forbidden: You do not have the necessary permissions to access this resource.'
+          'Token:CODE403- Forbidden: You do not have the necessary permissions to access this resource.'
         when 404
-          'Not Found: The requested resource could not be found.'
+          'Token:CODE404- Not Found: The requested resource could not be found.'
         when 500
-          'Internal Server Error: The server encountered an error and could not complete your request.'
+          'Token:CODE500- Internal Server Error: The server encountered an error and could not complete your request.'
         else
           "An unexpected error occurred: #{e.response}"
         end
       when 'send_transforming_api'
         case e.response.code
         when 400
-          'Bad Request: The server could not understand the request.'
+          'Transorm:CODE400- Bad Request: The server could not understand the request.'
         when 401
-          'Unauthorized: Access is denied due to invalid credentials.'
+          'Transorm:CODE401- Unauthorized: Access is denied due to invalid credentials.'
         when 403
-          'Forbidden: You do not have the necessary permissions to access this resource.'
+          'Transorm:CODE403- Forbidden: You do not have the necessary permissions to access this resource.'
         when 404
-          'Not Found: The requested resource could not be found.'
+          'Transorm:CODE404- Not Found: The requested resource could not be found.'
         when 500
-          'Internal Server Error: The server encountered an error and could not complete your request.'
+          'Transorm:CODE500- Internal Server Error: The server encountered an error and could not complete your request.'
         else
           "An unexpected error occurred: #{e.response}"
         end
       when 'publish_csh'
         case e.response.code
         when 200
-          'No new draft version created because uploaded resource contains no changes'
+          'pub_csh:CODE200- No new draft version created because uploaded resource contains no changes'
         when 400
-          'Bad Request: The server could not understand the request.'
+          'pub_csh:CODE400- Bad Request: The server could not understand the request.'
         when 401
-          'Not allowed to edit resource. User must either be the original creator of the resource or have been added as a collaborator.'
+          'pub_csh:CODE401- Not allowed to edit resource. User must either be the original creator of the resource or have been added as a collaborator.'
         when 403
-          'Forbidden: You do not have the necessary permissions to access this resource.'
+          'pub_csh:CODE403- Forbidden: You do not have the necessary permissions to access this resource.'
         when 404
-          'Not Found: The requested resource could not be found.'
+          'pub_csh:CODE404- Not Found: The requested resource could not be found.'
         when 422
           JSON.parse(JSON.parse(e.response.to_json)["message"])
         when 500
-          'Internal Server Error: The server encountered an error and could not complete your request.'
+          'pub_csh:CODE500- Internal Server Error: The server encountered an error and could not complete your request.'
         else
           "An unexpected error occurred: #{e.response}"
         end

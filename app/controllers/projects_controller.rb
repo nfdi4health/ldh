@@ -732,6 +732,11 @@ class ProjectsController < ApplicationController
     end
     identifier = JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
 
+    em = @project.extended_metadata
+    jem = JSON.parse(em.json_metadata)
+    jem['Resource_identifier_Project'] = identifier
+    em.update_column(:json_metadata, jem.to_json)
+
     flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
       #@project.reload
