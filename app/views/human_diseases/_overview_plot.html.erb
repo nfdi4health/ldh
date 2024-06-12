@@ -1,5 +1,7 @@
 <%
-  dataframe = get_human_diseases_plot_data()
+  data     = get_human_diseases_plot_data()
+  tagged   = data[:tagged]
+  untagged = data[:untagged]
 %>
 
 <div class="row hidden-xs hidden-sm">
@@ -10,6 +12,10 @@
       </div>
       <div class="panel-body">
         <div id="human-disease-graph"></div>
+        <small class="text-muted">
+          Untagged:<br>
+          <%= untagged.map{ |key, value| key.to_s.humanize + ': ' + value.to_s }.join(', ') %>
+        </small>
       </div>
     </div>
   </div>
@@ -22,20 +28,21 @@
   var data = [
     <%
       plots = [
-        { key: :projects,     annotation: { x: 0.145, y: 1.05 } },
-        { key: :publications, annotation: { x: 0.5, y: 1.05 } },
-        { key: :models,       annotation: { x: 0.86, y: 1.05 } },
+        { key: :projects,     annotation: { x: 0.105, y: 1.05 } },
+        { key: :publications, annotation: { x: 0.37, y: 1.05 } },
+        { key: :models,       annotation: { x: 0.63, y: 1.05 } },
+        { key: :data_files,   annotation: { x: 0.895, y: 1.05 } },
       ]
       index = -1
     %>
     <% plots.each do |plot| %>
       {
         type: 'sunburst',
-        ids:       [ <%== dataframe.map{ |c| '"' + c[:id]     + '"' }.join(', ') %> ],
-        labels:    [ <%== dataframe.map{ |c| '"' +            + '"' }.join(', ') %> ],
-        parents:   [ <%== dataframe.map{ |c| '"' + c[:parent] + '"' }.join(', ') %> ],
-        values:    [ <%== dataframe.map{ |c|       c[plot[:key]]    }.join(', ') %> ],
-        hovertext: [ <%== dataframe.map{ |c| '"' + c[:title]  + '"' }.join(', ') %> ],
+        ids:       [ <%== tagged.map{ |c| '"' + c[:id]     + '"' }.join(', ') %> ],
+        labels:    [ <%== tagged.map{ |c| '"' +            + '"' }.join(', ') %> ],
+        parents:   [ <%== tagged.map{ |c| '"' + c[:parent] + '"' }.join(', ') %> ],
+        values:    [ <%== tagged.map{ |c|       c[plot[:key]]    }.join(', ') %> ],
+        hovertext: [ <%== tagged.map{ |c| '"' + c[:title]  + '"' }.join(', ') %> ],
         outsidetextfont: { size: 20, color: '#377eb8' },
         leaf: { opacity: 1 },
         marker: { line: { width: 2 } },
@@ -48,7 +55,7 @@
   var layout = {
     margin: { l: 0, r: 0, b: 0, t: 50 },
     sunburstcolorway: [ '#217290', '#EC7063', '#5499C7', '#01d28e', '#f4d03f', '#8e44ad'],
-    grid: { rows: 1, columns:3, pattern: 'independent' },
+    grid: { rows: 1, columns: 4, pattern: 'independent' },
     annotations: [
       <% plots.each do |plot| %>
         {

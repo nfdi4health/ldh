@@ -500,7 +500,7 @@ SEEK::Application.routes.draw do
       get :retrieve_nels_sample_metadata
       get :has_matching_sample_type
     end
-    resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :collections, :workflows, :file_templates, :placeholders, only: [:index]
+    resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :collections, :workflows, :file_templates, :placeholders, :human_diseases, only: [:index]
   end
 
   resources :presentations, concerns: [:has_content_blobs, :publishable, :has_versions, :asset, :explorable_spreadsheet] do
@@ -613,7 +613,7 @@ SEEK::Application.routes.draw do
       post :request_contact
       post :upload_pdf
     end
-    resources :people, :programmes, :projects, :investigations, :assays, :studies, :models, :data_files, :documents, :presentations, :organisms, :events, :collections, :workflows, :human_diseases, only: [:index]
+    resources :people, :programmes, :projects, :investigations, :assays, :studies, :models, :data_files, :documents, :presentations, :organisms, :human_diseases, :events, :collections, :workflows, :human_diseases, only: [:index]
   end
 
   resources :events, concerns: [:asset] do
@@ -645,7 +645,7 @@ SEEK::Application.routes.draw do
     collection do
       post :search_ajax
     end
-    resources :projects, :programmes, :assays, :studies, :models, :publications, only: [:index]
+    resources :projects, :programmes, :assays, :studies, :models, :publications, :data_files, only: [:index]
     member do
       get :tree
     end
