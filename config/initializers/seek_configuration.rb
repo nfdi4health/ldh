@@ -120,7 +120,7 @@ def load_seek_config_defaults!
   Seek::Config.default :header_image_link,"https://www.nfdi4health.de/"
   Seek::Config.default :copyright_addendum_enabled,false
   Seek::Config.default :copyright_addendum_content,'Additions copyright ...'
-  Seek::Config.default :issue_tracker, 'https://github.com/nfdi4health/seek/issues'
+  Seek::Config.default :issue_tracker, 'https://github.com/nfdi4health/ldh/issues'
 
   Seek::Config.fixed :application_name,"FAIRDOM-SEEK"
 
