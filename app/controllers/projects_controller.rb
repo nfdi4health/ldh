@@ -740,7 +740,6 @@ respond_to do |format|
       flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
     end
 
-    flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
       format.html { redirect_to(@project) }
       format.rdf { render template: 'rdf/show' }

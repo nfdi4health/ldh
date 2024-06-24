@@ -82,7 +82,7 @@ module Nfdi4Health
         when 404
           'pub_csh:CODE404- Not Found: The requested resource could not be found.'
         when 422
-          JSON.parse(JSON.parse(e.response.to_json)["message"])
+          JSON.parse(JSON.parse(e.response.to_json))["error"]["message"]
         when 500
           'pub_csh:CODE500- Internal Server Error: The server encountered an error and could not complete your request.'
         else
