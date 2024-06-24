@@ -597,21 +597,16 @@ class ProjectsController < ApplicationController
       endpoints = Nfdi4Health::Client.new()
       endpoints.send_transforming_api(user_attributes_selected_json_parse.to_json, url)
     rescue RestClient::ExceptionWithResponse => e
-      if e.response
-        flash[:error] = "HTTP Status: #{e.response.code} - #{e.response.body}"
-        respond_to do |format|
-          format.html { redirect_to(@project) }
+      flash[:error] = if e.response
+                        "HTTP Status: #{e.response.code} - #{e.response.body}"
+                      else
+          "RestClient::ExceptionWithResponse occurred without a response: #{e.message}"
+                        end
+respond_to do |format|
+            format.html { redirect_to(@project) }
           format.rdf { render template: 'rdf/show' }
           format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
           end
-        else
-        flash[:error] = "RestClient::ExceptionWithResponse occurred without a response: #{e.message}"
-        respond_to do |format|
-          format.html { redirect_to(@project) }
-          format.rdf { render template: 'rdf/show' }
-          format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
-          end
-        end
 
       return
     rescue RestClient::RequestTimeout => e
@@ -730,7 +725,16 @@ class ProjectsController < ApplicationController
       end
       return
     end
-    identifier = JSON.parse(JSON.parse(endpoints.to_json)["endpoint"])["resource"]["identifier"]
+    if !JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource'].nil?
+      identifier = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource']['identifier']
+      flash[:notice] = if !project_transformed_update_hash['resource']['identifier'].nil?
+                         "#{t('project')} was successfully updated with ID #{identifier}."
+                       else
+                         "#{t('project')} was successfully published with ID #{identifier}."
+                       end
+    else
+      flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
+    end
 
     em = @project.extended_metadata
     jem = JSON.parse(em.json_metadata)
@@ -739,10 +743,7 @@ class ProjectsController < ApplicationController
 
     flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
-      #@project.reload
-      #flash[:notice] = "#{t('project')} was successfully published."
       format.html { redirect_to(@project) }
-      #format.html { render(params[:only_content] ? { layout: false } : {})} # show.html.erb
       format.rdf { render template: 'rdf/show' }
       format.json { render json: @project, include: [params[:include]] }
     end
@@ -900,11 +901,11 @@ class ProjectsController < ApplicationController
     requester = @message_log.sender
 
     if params['accept_request']=='1'
-      if params['institution']['id']
-        @institution = Institution.find(params['institution']['id'])
-      else
-        @institution = Institution.new(params.require(:institution).permit([:title, :web_page, :city, :country]))
-      end
+      @institution = if params['institution']['id']
+                       Institution.find(params['institution']['id'])
+                     else
+        Institution.new(params.require(:institution).permit([:title, :web_page, :city, :country]))
+                     end
 
       @project = Project.new(params.require(:project).permit([:title, :web_page, :description]))
       @project.programme = @programme
@@ -961,11 +962,11 @@ class ProjectsController < ApplicationController
       # @programme already populated in before_filter when checking permissions
       make_programme_admin = @programme&.new_record?
 
-      if params['institution']['id']
-        @institution = Institution.find(params['institution']['id'])
-      else
-        @institution = Institution.new(params.require(:institution).permit([:title, :web_page, :city, :country]))
-      end
+      @institution = if params['institution']['id']
+                       Institution.find(params['institution']['id'])
+                     else
+        Institution.new(params.require(:institution).permit([:title, :web_page, :city, :country]))
+                     end
 
       @project = Project.new(params.require(:project).permit([:title, :web_page, :description]))
       @project.programme = @programme
@@ -1282,11 +1283,11 @@ class ProjectsController < ApplicationController
     return unless @programme || params['programme']
 
     unless @programme
-      if params['programme']['id']
-        @programme = Programme.find(params['programme']['id'])
-      else
-        @programme = Programme.new(params.require(:programme).permit([:title]))
-      end
+      @programme = if params['programme']['id']
+                     Programme.find(params['programme']['id'])
+                   else
+        Programme.new(params.require(:programme).permit([:title]))
+                   end
     end
 
     if @programme.new_record?
