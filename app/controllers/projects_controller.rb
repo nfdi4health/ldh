@@ -733,9 +733,9 @@ respond_to do |format|
                          "#{t('project')} was successfully published with ID #{identifier}."
                        end
     else
+      identifier=project_transformed_update_hash['resource']['identifier']['identifier']
       flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
     end
-
     em = @project.extended_metadata
     jem = JSON.parse(em.json_metadata)
     jem['Resource_identifier_Project'] = identifier
