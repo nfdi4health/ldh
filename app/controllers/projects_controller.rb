@@ -727,19 +727,18 @@ respond_to do |format|
     end
     if !JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource'].nil?
       identifier = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource']['identifier']
-      flash[:notice] = if !project_transformed_update_hash['resource']['identifier'].nil?
-                         "#{t('project')} was successfully updated with ID #{identifier}."
-                       else
-                         "#{t('project')} was successfully published with ID #{identifier}."
-                       end
+      if !project_transformed_update_hash['resource']['identifier'].nil?
+        flash[:notice] ="#{t('project')} was successfully updated with ID #{identifier}."
+      else
+        flash[:notice] ="#{t('project')} was successfully published with ID #{identifier}."
+        em = @project.extended_metadata
+        jem = JSON.parse(em.json_metadata)
+        jem['Resource_identifier_Project'] = identifier
+        em.update_column(:json_metadata, jem.to_json)
+      end
     else
-      identifier=project_transformed_update_hash['resource']['identifier']['identifier']
       flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
     end
-    em = @project.extended_metadata
-    jem = JSON.parse(em.json_metadata)
-    jem['Resource_identifier_Project'] = identifier
-    em.update_column(:json_metadata, jem.to_json)
 
     flash[:notice] = "#{t('project')} was successfully published with ID #{identifier}."
     respond_to do |format|
