@@ -63,21 +63,16 @@
 
       <%= order_icon(item,current_user, order_investigations_project_path(item), item.investigations, 'investigation') %>
     <% end %>
-    <% if Seek::Config.n4h_enabled %>
+    <% if Seek::Config.n4h_enabled && item.extended_metadata != nil %>
     <li><%= image_tag_for_key('publish', publish_to_csh_project_path(item), "Publish to NFDI4Health GCHSH", nil, "Publish to NFDI4Health GCHSH") -%></li>
     <% else %>
-      <% explanation = "The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>
+      <% explanation = "Your project does not include metadata, or The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>
       <li>
       <span class='disabled_icon disabled' onclick='alert("<%= explanation-%>")' data-tooltip='<%= tooltip(explanation) -%>'>
           <%= image('publish', {:alt=>"Publish", :class=>"disabled"}) %> Publish to NFDI4Health GCHSH
       </span>
       </li>
     <% end %>
-
-
-
-
-
     <% if admin_logged_in? || item.can_manage? -%>
       <%= delete_icon(item,current_user,"Any members will also be removed from the #{t('project')}, are you sure?") %>
     <% end -%>
