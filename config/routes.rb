@@ -413,6 +413,7 @@ SEEK::Application.routes.draw do
       get :export_isatab_json
       get :export_isa, action: :export_isa
       get :manage
+      get :publish_to_csh
       get :order_studies
       patch :manage_update
     end
@@ -442,6 +443,7 @@ SEEK::Application.routes.draw do
       post :check_gatekeeper_required
       post :publish_related_items
       post :publish
+      get :publish_to_csh
       get :published
       get :isa_children
       get :manage

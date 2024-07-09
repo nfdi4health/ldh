@@ -17,8 +17,6 @@ module Nfdi4Health
       @transformed = RestClient::Request.execute(method: :post, url: url,payload: project, headers: { content_type: :json, accept: :json }).body
     end
 
-
-
     def get_token(url,user,password)
       headers = {
         content_type: 'application/x-www-form-urlencoded'
@@ -37,6 +35,7 @@ module Nfdi4Health
       )
 
     end
+
     def handle_restclient_error(e, name_server)
       case name_server
       when 'get_token'
@@ -91,4 +90,85 @@ module Nfdi4Health
       end
     end
   end
+
+  class Preparation_json
+    def initialize()
+
+    end
+    def transforming_api(project_find_id, serializer,type)
+      @project = project_find_id
+      project_attributes_json = serializer.new(@project).to_json
+
+      #@user_current = current_person
+      special_characters = {
+        '\\u0026' => '__AMP__',
+        '\\u003c' => '__LT__',
+        '\\u003e' => '__GT__',
+        '\\u0022' => '__QUOTE__'
+      }
+
+      # Replace special characters with placeholders
+      special_characters.each do |char, placeholder|
+        project_attributes_json.gsub!(char, placeholder)
+      end
+      project_attributes_json_parse = JSON.parse(project_attributes_json)
+
+      meta_data = JSON.parse(@project.to_json(only:[:created_at,:updated_at, :uuid]))
+      meta_data = meta_data.transform_keys { |key| key == 'created_at' ? 'created' : key }
+      meta_data = meta_data.transform_keys { |key| key == 'updated_at' ? 'modified' : key }
+      meta_data['api_version'] = ActiveModel::Serializer.config.api_version.to_s
+      meta_data['base_url'] = Seek::Config.site_base_host
+      meta_data = {meta: meta_data}
+      project_attributes_json_parse['investigation']={}
+      selected_keys = %w[project_administrators pals asset_housekeepers asset_gatekeepers organisms human_diseases people
+                   institutions programmes investigations studies assays data_files project_relationships_json_files
+                   file_templates placeholders models sops publications presentations events documents workflows
+                   collections  submitter projects]
+      project_relationships_json_parse = project_attributes_json_parse.select { |key, _| selected_keys.include?(key) }
+      project_relationships_json = {relationships: project_relationships_json_parse}
+
+      selected_keys.each do |item|
+        project_attributes_json_parse.delete(item)
+      end
+      project_attributes_json = {attributes: project_attributes_json_parse}
+
+      attributes_selected_json_parse = project_attributes_json.merge(project_relationships_json)
+      attributes_selected_json_parse = attributes_selected_json_parse.merge(meta_data)
+      attributes_selected_json_parse['id'] = @project.id.to_s
+      attributes_selected_json_parse['type'] = type
+      attributes_selected_json_parse['jsonapi'] = { 'version' => '1.0' }
+      attributes_selected_json_parse['links'] = { 'self' => "/"+type+"/#{@project.id}"}
+      attributes_selected_json_parse['relationships']={}
+      user_attributes_selected_json_parse = {data: attributes_selected_json_parse}
+      user_attributes_selected_json_parse
+    end
+    def header(endpoints, current_user_json,current_person)
+      #@user_current = current_person
+      special_characters = {
+        '\\u0026' => '__AMP__',
+        '\\u003c' => '__LT__',
+        '\\u003e' => '__GT__',
+        '\\u0022' => '__QUOTE__'
+      }
+      final_json_string = endpoints.to_json
+      special_characters.each do |char, placeholder|
+        final_json_string.gsub!(placeholder, char)
+      end
+
+      project_transformed_hash = JSON.parse(JSON.parse(final_json_string)['transformed'])
+
+
+
+      project_transformed_update_hash = project_transformed_hash
+      current_person_json = current_person.to_json
+      current_person_json_parsed = JSON.parse(current_person_json)
+      selected_keys = ['first_name', 'last_name','email']
+      current_person_json_parsed_filtered = current_person_json_parsed.select { |key, _| selected_keys.include?(key) }
+      current_person_json_parsed_filtered['login_id']=JSON.parse(current_user_json)['login']
+      sender_part = {sender: current_person_json_parsed_filtered }
+      sender_project_merged = sender_part.merge(project_transformed_update_hash)
+      sender_project_merged
+    end
+  end
+
 end
