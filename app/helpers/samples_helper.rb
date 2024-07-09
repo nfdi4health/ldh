@@ -81,6 +81,8 @@ module SamplesHelper
       value = [value] unless value.is_a?(Array)
       value.compact.each do |v|
         id = v[:id]
+        next if id.blank? # Skip value if there is no ID
+
         title = v[:title]
         title = '<em>Hidden</em>' unless Sample.find(id).can_view?
         existing_objects << str.new(id, title)
@@ -283,9 +285,11 @@ module SamplesHelper
     link_to(link,link,target: :_blank)
   end
 
-  def ols_root_term_link(ols_id, term_uri)
-    ols_link = "#{Ebi::OlsClient::ROOT_URL}/ontologies/#{ols_id}/terms?iri=#{term_uri}"
-    link_to(term_uri, ols_link, target: :_blank)
+  def ols_root_term_link(ols_id, term_uris)
+    term_uris.split(',').collect(&:strip).collect do |uri|
+      ols_link = "#{Ebi::OlsClient::ROOT_URL}/ontologies/#{ols_id}/terms?iri=#{uri}"
+      link_to(uri, ols_link, target: :_blank)
+    end.join(', ').html_safe
   end
 
   def get_extra_info(sample)
