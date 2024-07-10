@@ -471,7 +471,7 @@ For non-interventional studies, this can be the name of specific measurement(s) 
 
   unless ExtendedMetadataType.where(title:'Resource_classification_Study', supported_type:'ExtendedMetadata').any?
     emt = ExtendedMetadataType.new(title: 'Resource_classification_Study', supported_type:'ExtendedMetadata')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_classification_type_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_classification_type_Study_cv, description:'A term describing the resource.', label:'Type of the resource(*)')
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_classification_type_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_classification_type_Study_cv, description:'A term describing the resource.', label:'Type of the resource', required: true)
     emt.save!
   end
 
@@ -482,8 +482,8 @@ For non-interventional studies, this can be the name of specific measurement(s) 
 
   unless ExtendedMetadataType.where(title:'Resource_titles_Study', supported_type:'ExtendedMetadata').any?
     emt = ExtendedMetadataType.new(title: 'Resource_titles_Study', supported_type:'ExtendedMetadata')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_titles_text_Study', sample_attribute_type: @string_type, sample_controlled_vocab: nil, description: 'Scientific unabbreviated title or name of the Study.  ', label: 'Title/name(*)')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_titles_language_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_titles_language_Study_cv, description:'Language in which the title/name is provided.', label:'Language of the title/name(*)')
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_titles_text_Study', sample_attribute_type: @string_type, sample_controlled_vocab: nil, description: 'Scientific unabbreviated title or name of the Study.  ', label: 'Title/name',required: true)
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_titles_language_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_titles_language_Study_cv, description:'Language in which the title/name is provided.', label:'Language of the title/name',required: true)
     emt.save!
   end
 
@@ -494,8 +494,8 @@ For non-interventional studies, this can be the name of specific measurement(s) 
 
   unless ExtendedMetadataType.where(title:'Resource_acronyms_Study', supported_type:'ExtendedMetadata').any?
     emt = ExtendedMetadataType.new(title: 'Resource_acronyms_Study', supported_type:'ExtendedMetadata')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_acronyms_text_Study', sample_attribute_type: @string_type, sample_controlled_vocab: nil, description: 'If existing, acronym(s) of the Study.', label: 'Acronym(*)')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_acronyms_language_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_acronyms_language_Study_cv, description:'Language in which the acronym is provided.', label:'Language of the acronym(*)')
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_acronyms_text_Study', sample_attribute_type: @string_type, sample_controlled_vocab: nil, description: 'If existing, acronym(s) of the Study.', label: 'Acronym',required: true)
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_acronyms_language_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_acronyms_language_Study_cv, description:'Language in which the acronym is provided.', label:'Language of the acronym',required: true)
     emt.save!
   end
 
@@ -506,8 +506,8 @@ For non-interventional studies, this can be the name of specific measurement(s) 
 
   unless ExtendedMetadataType.where(title:'Resource_descriptions_Study', supported_type:'ExtendedMetadata').any?
     emt = ExtendedMetadataType.new(title: 'Resource_descriptions_Study', supported_type:'ExtendedMetadata')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_descriptions_text_Study', sample_attribute_type: @text_type, sample_controlled_vocab: nil, description: 'Short plain text summary of the Study.', label: 'Description(*)')
-    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_descriptions_language_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_descriptions_language_Study_cv, description:'Language in which the description text is provided.', label:'Language of the description(*)')
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_descriptions_text_Study', sample_attribute_type: @text_type, sample_controlled_vocab: nil, description: 'Short plain text summary of the Study.', label: 'Description', required: true)
+    emt.extended_metadata_attributes << ExtendedMetadataAttribute.new(title: 'Resource_descriptions_language_Study', sample_attribute_type: @cv_type, sample_controlled_vocab:Resource_descriptions_language_Study_cv, description:'Language in which the description text is provided.', label:'Language of the description', required: true)
     emt.save!
   end
 
