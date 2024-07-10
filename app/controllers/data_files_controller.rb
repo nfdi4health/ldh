@@ -38,7 +38,9 @@ class DataFilesController < ApplicationController
       redirect_to destroy_samples_confirm_data_file_path(@data_file)
     else
       if params[:destroy_extracted_samples] == '1'
-        @data_file.extracted_samples.destroy_all
+        @data_file.extracted_sample_ids.each_slice(500) do |ids|
+          SamplesBatchDeleteJob.perform_later(ids)
+        end
       end
       super
     end
@@ -167,6 +169,7 @@ class DataFilesController < ApplicationController
       SampleDataPersistJob.new(@data_file, @sample_type, User.current_user, assay_ids: params["assay_ids"]).queue_job
       flash[:notice] = 'Started creating extracted samples'
     else
+      @data_file.sample_persistence_task.destroy if @data_file.sample_persistence_task&.success?
       SampleDataExtractionJob.new(@data_file, @sample_type).queue_job
     end
 

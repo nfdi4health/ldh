@@ -90,7 +90,7 @@ class StudiesController < ApplicationController
   end
 
   def delete_linked_sample_types
-    return unless is_single_page_study?
+    return unless @study.is_isa_json_compliant?
     return if @study.sample_types.empty?
 
     # The study sample types must be destroyed in reversed order
@@ -203,7 +203,7 @@ class StudiesController < ApplicationController
     # e.g: Study.new(title: 'title', investigation: investigations(:metabolomics_investigation), policy: FactoryBot.create(:private_policy))
     # study.policy = Policy.create(name: 'default policy', access_type: 1)
     # render plain: params[:studies].inspect
-    metadata_types = ExtendedMetadataType.where(title: 'MIAPPE metadata', supported_type: 'Study').last
+    metadata_types = ExtendedMetadataType.where(title: ExtendedMetadataType::MIAPPE_TITLE, supported_type: 'Study').last
     studies_length = params[:studies][:title].length
     studies_uploaded = false
     data_file_uploaded = false
@@ -505,10 +505,4 @@ class StudiesController < ApplicationController
                                   { discussion_links_attributes:[:id, :url, :label, :_destroy] },
                                   { extended_metadata_attributes: determine_extended_metadata_keys })
   end
-end
-
-def is_single_page_study?
-  return false unless params.key?(:return_to)
-
-  params[:return_to].start_with? '/single_pages/'
 end

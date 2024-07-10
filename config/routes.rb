@@ -16,7 +16,7 @@ SEEK::Application.routes.draw do
         get 'tools' => 'tools#index'
         get 'tools/:id' => 'tools#show'
         get 'tools/:id/versions' => 'tool_versions#index'
-        get 'tools/:id/versions/:version_id' => 'tool_versions#show'
+        get 'tools/:id/versions/:version_id' => 'tool_versions#show', as: :tool_version
         get 'tools/:id/versions/:version_id/containerfile' => 'tool_versions#containerfile'
         get 'tools/:id/versions/:version_id/:type/descriptor(/*relative_path)' => 'tool_versions#descriptor', constraints: { relative_path: /.+/ }, format: false, as: :tool_versions_descriptor
         get 'tools/:id/versions/:version_id/:type/files' => 'tool_versions#files', format: false
@@ -206,6 +206,10 @@ SEEK::Application.routes.draw do
   resources :extended_metadata_types do
     collection do
       get :form_fields
+      get :administer
+    end
+    member do
+      put :administer_update
     end
   end
 
@@ -346,6 +350,7 @@ SEEK::Application.routes.draw do
       get :administer_join_request
       post :respond_join_request
       get :guided_join
+      post :update_annotations_ajax
     end
     resources :programmes, :people, :institutions, :assays, :studies, :investigations, :models, :sops, :workflows, :data_files, :presentations,
               :publications, :events, :sample_types, :samples, :specimens, :strains, :search, :organisms, :human_diseases, :documents, :file_templates, :placeholders, :collections, :templates, only: [:index]
@@ -500,7 +505,7 @@ SEEK::Application.routes.draw do
     resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :collections, :workflows, :file_templates, :placeholders, only: [:index]
   end
 
-  resources :presentations, concerns: [:has_content_blobs, :publishable, :has_versions, :asset] do
+  resources :presentations, concerns: [:has_content_blobs, :publishable, :has_versions, :asset, :explorable_spreadsheet] do
     resources :people, :programmes, :projects, :publications, :events, :collections, :workflows, :investigations, :studies, :assays, only: [:index]
   end
 
@@ -747,7 +752,7 @@ SEEK::Application.routes.draw do
       post :template_attributes
     end
     collection do
-post :filter_isa_tags_by_level
+      post :filter_isa_tags_by_level
       get :task_status
       get :default_templates
       post :populate_template
@@ -760,6 +765,7 @@ post :filter_isa_tags_by_level
   resources :single_pages do
     member do
       get :dynamic_table_data
+      post :update_annotations_ajax
     end
     collection do
       get :batch_sharing_permission_preview
@@ -821,7 +827,7 @@ post :filter_isa_tags_by_level
   # Omniauth
   post '/auth/:provider' => 'sessions#create', as: :omniauth_authorize # For security, ONLY POST should be enabled on this route.
   match '/auth/:provider/callback' => 'sessions#create', as: :omniauth_callback, via: [:get, :post] # Callback routes need both GET and POST enabled.
-  match '/identities/auth/:provider/callback' => 'sessions#create', via: [:get, :post] # Needed for legacy support..
+  match '/identities/auth/:provider/callback' => 'sessions#create', as: :legacy_omniauth_callback, via: [:get, :post] # Needed for legacy support..
   get '/auth/failure' => 'sessions#omniauth_failure', as: :omniauth_failure
 
   get '/activate(/:activation_code)' => 'users#activate', as: :activate
