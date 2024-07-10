@@ -63,7 +63,7 @@
 
       <%= order_icon(item,current_user, order_investigations_project_path(item), item.investigations, 'investigation') %>
     <% end %>
-    <% if Seek::Config.n4h_enabled && item.extended_metadata != nil %>
+    <% if can_publish?(item) %>
     <li><%= image_tag_for_key('publish', publish_to_csh_project_path(item), "Publish to NFDI4Health GCHSH", nil, "Publish to NFDI4Health GCHSH") -%></li>
     <% else %>
       <% explanation = "Your project does not include metadata, or The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>

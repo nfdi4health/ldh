@@ -146,18 +146,12 @@ class InvestigationsController < ApplicationController
 
   def publish_to_csh
     @investigation = Investigation.find(params[:id])
-    password = Seek::Config.n4h_password
-    url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
-    authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
-    username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
-    url_publish = Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url
-
     data_investigation = Nfdi4Health::Preparation_json.new
-    transforming_api_data = data_investigation.transforming_api(Investigation.find(params[:id]), InvestigationSerializer, 'investigation')
+    transforming_api_data = data_investigation.transforming_api(@investigation, InvestigationSerializer, 'investigation')
 
     begin
       endpoints = Nfdi4Health::Client.new()
-      endpoints.send_transforming_api(transforming_api_data.to_json, url)
+      endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response
                         "HTTP Status: #{e.response.code} - #{e.response.body}"
@@ -199,7 +193,7 @@ class InvestigationsController < ApplicationController
 
     sender_investigation_merged=data_investigation.header(endpoints, @current_user.to_json,current_person)
     begin
-      endpoints.get_token(authorization_url,username,password)
+      endpoints.get_token
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = endpoints.handle_restclient_error(e,'get_token')
       respond_to do |format|
@@ -238,7 +232,7 @@ class InvestigationsController < ApplicationController
     access_token_hash = JSON.parse(access_token)
     one_time_token = access_token_hash['access_token']
     begin
-      endpoints.publish_csh(sender_investigation_merged.to_json,url_publish,one_time_token)
+      endpoints.publish_csh(sender_investigation_merged.to_json,one_time_token)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = endpoints.handle_restclient_error(e,'publish_csh')
       respond_to do |format|

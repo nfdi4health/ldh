@@ -4,32 +4,38 @@ module Nfdi4Health
 
   class Client
     attr_accessor :transformed
-
-    def publish_csh(project_transformed,url,token)
+    def initialize()
+      @password = Seek::Config.n4h_password
+      @url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
+      @authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
+      @username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
+      @url_publish = Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url
+    end
+    def publish_csh(project_transformed,token)
       content_length = project_transformed.bytesize
       headers = { content_type: 'application/json',Content_Length: content_length  ,Host: 'csh.nfdi4health.de', Authorization: 'Bearer ' + token
       }
 
-      @endpoint = RestClient::Request.execute(method: :post, url: url, payload: project_transformed, headers: headers)
+      @endpoint = RestClient::Request.execute(method: :post, url: @url_publish, payload: project_transformed, headers: headers)
     end
 
-    def send_transforming_api(project,url)
-      @transformed = RestClient::Request.execute(method: :post, url: url,payload: project, headers: { content_type: :json, accept: :json }).body
+    def send_transforming_api(project)
+      @transformed = RestClient::Request.execute(method: :post, url: @url,payload: project, headers: { content_type: :json, accept: :json }).body
     end
 
-    def get_token(url,user,password)
+    def get_token
       headers = {
         content_type: 'application/x-www-form-urlencoded'
       }
       payload = {
-        client_secret: password,
+        client_secret: @password,
         grant_type: 'client_credentials',
-        client_id: user,
+        client_id: @username,
       }
 
       @token = RestClient::Request.execute(
         method: :post,
-        url: url,
+        url: @authorization_url,
         payload: payload,
         headers: headers
       )

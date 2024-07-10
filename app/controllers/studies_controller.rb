@@ -355,17 +355,12 @@ class StudiesController < ApplicationController
   end
   def publish_to_csh
     @study = Study.find(params[:id])
-    password = Seek::Config.n4h_password
-    url = Seek::Config.n4h_url.blank? ? nil : Seek::Config.n4h_url
-    authorization_url = Seek::Config.n4h_authorization_url.blank? ? nil : Seek::Config.n4h_authorization_url
-    username = Seek::Config.n4h_username.blank? ? nil : Seek::Config.n4h_username
-    url_publish = Seek::Config.n4h_publish_url.blank? ? nil : Seek::Config.n4h_publish_url
     data_study = Nfdi4Health::Preparation_json.new
-    transforming_api_data = data_study.transforming_api(Study.find(params[:id]), StudySerializer, 'studies')
+    transforming_api_data = data_study.transforming_api(@study, StudySerializer, 'studies')
 
     begin
       endpoints = Nfdi4Health::Client.new()
-      endpoints.send_transforming_api(transforming_api_data.to_json, url)
+      endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response
                         "HTTP Status: #{e.response.code} - #{e.response.body}"
@@ -408,7 +403,7 @@ class StudiesController < ApplicationController
     sender_study_merged = data_study.header(endpoints, @current_user.to_json,current_person)
 
     begin
-      endpoints.get_token(authorization_url,username,password)
+      endpoints.get_token
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = endpoints.handle_restclient_error(e,'get_token')
       respond_to do |format|
@@ -447,7 +442,7 @@ class StudiesController < ApplicationController
     access_token_hash = JSON.parse(access_token)
     one_time_token = access_token_hash['access_token']
     begin
-      endpoints.publish_csh(sender_study_merged.to_json,url_publish,one_time_token)
+      endpoints.publish_csh(sender_study_merged.to_json,one_time_token)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = endpoints.handle_restclient_error(e,'publish_csh')
       respond_to do |format|

@@ -42,7 +42,7 @@
   <% if (item.can_publish? || item.contains_publishable_items?) && item.can_manage? -%>
     <li><%= image_tag_for_key('publish', polymorphic_path(item, :action => :check_related_items), nil, { :method => :post }, "Publish full #{t('investigation')}") -%></li>
   <% end -%>
-	<% if Seek::Config.n4h_enabled && item.extended_metadata != nil %>
+		<% if can_publish?(item) %>
 		<li><%= image_tag_for_key('publish', publish_to_csh_investigation_path(item), "Publish to NFDI4Health GCHSH", nil, "Publish to NFDI4Health GCHSH") -%></li>
 	<% else %>
 		<% explanation = "Your investigation does not include metadata, or The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>
