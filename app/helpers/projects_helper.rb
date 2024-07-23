@@ -127,4 +127,7 @@ module ProjectsHelper
     return nil if project.has_member?(current_user)
     ProjectMembershipMessageLog.recent_requests(current_user.try(:person), project).first
   end
+  def can_publish?(project)
+    Seek::Config.n4h_enabled && project.extended_metadata.present?
+  end
 end

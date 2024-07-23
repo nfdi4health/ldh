@@ -1,3 +1,4 @@
+require 'nfdi4health/csh_client'
 class InvestigationsController < ApplicationController
 
   include Seek::IndexPager
@@ -143,6 +144,149 @@ class InvestigationsController < ApplicationController
     end
   end
 
+  def publish_to_csh
+    @investigation = Investigation.find(params[:id])
+    data_investigation = Nfdi4Health::Preparation_json.new
+    transforming_api_data = data_investigation.transforming_api(@investigation, InvestigationSerializer, 'investigation')
+
+    begin
+      endpoints = Nfdi4Health::Client.new()
+      endpoints.send_transforming_api(transforming_api_data.to_json)
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = if e.response
+                        "HTTP Status: #{e.response.code} - #{e.response.body}"
+                      else
+                        "RestClient::ExceptionWithResponse occurred without a response: #{e.message}"
+                      end
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+
+      return
+    rescue RestClient::RequestTimeout => e
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError => e
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    sender_investigation_merged=data_investigation.header(endpoints, @current_user.to_json,current_person)
+    begin
+      endpoints.get_token
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,'get_token')
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    token_respond_hash = JSON.parse(endpoints.to_json)
+    access_token = token_respond_hash['token']
+    access_token_hash = JSON.parse(access_token)
+    one_time_token = access_token_hash['access_token']
+    begin
+      endpoints.publish_csh(sender_investigation_merged.to_json,one_time_token)
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,'publish_csh')
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    if !JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource'].nil?
+      identifier = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource']['identifier']
+      if !sender_investigation_merged['resource']['identifier'].nil?
+        flash[:notice] ="#{t('investigation')} was successfully updated with ID #{identifier}."
+      else
+        flash[:notice] ="#{t('investigation')} was successfully published with ID #{identifier}."
+        em = @investigation.extended_metadata
+        jem = JSON.parse(em.json_metadata)
+        jem['Resource_identifier_Investigation'] = identifier
+        em.update_column(:json_metadata, jem.to_json)
+      end
+    else
+      flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
+    end
+
+    respond_to do |format|
+      format.html { redirect_to(@investigation) }
+      format.rdf { render template: 'rdf/show' }
+      format.json { render json: @investigation, include: [params[:include]] }
+    end
+  end
 
 
   private
