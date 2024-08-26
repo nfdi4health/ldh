@@ -87,7 +87,7 @@ module Nfdi4Health
         when 404
           'pub_csh:CODE404- Not Found: The requested resource could not be found.'
         when 422
-          JSON.parse(JSON.parse(e.response.to_json))["error"]["message"]
+          "#{JSON.parse(JSON.parse(e.response.to_json))['error']['message']}. Error(s) caused by: #{JSON.parse(JSON.parse(e.response.to_json))['error']['paths']}"
         when 500
           'pub_csh:CODE500- Internal Server Error: The server encountered an error and could not complete your request.'
         else
@@ -148,6 +148,7 @@ module Nfdi4Health
       user_attributes_selected_json_parse = {data: attributes_selected_json_parse}
       user_attributes_selected_json_parse
     end
+
     def header(endpoints, current_user_json,current_person)
       #@user_current = current_person
       special_characters = {
@@ -166,14 +167,20 @@ module Nfdi4Health
 
 
       project_transformed_update_hash = project_transformed_hash
-      current_person_json = current_person.to_json
-      current_person_json_parsed = JSON.parse(current_person_json)
-      selected_keys = ['first_name', 'last_name','email']
-      current_person_json_parsed_filtered = current_person_json_parsed.select { |key, _| selected_keys.include?(key) }
-      current_person_json_parsed_filtered['login_id']=JSON.parse(current_user_json)['login']
-      sender_part = {sender: current_person_json_parsed_filtered }
-      sender_project_merged = sender_part.merge(project_transformed_update_hash)
-      sender_project_merged
+      #current_person_json_parsed = JSON.parse(current_person.to_json)
+      #selected_keys = ['first_name', 'last_name','email']
+      #current_person_json_parsed_filtered = current_person_json_parsed.select { |key, _| selected_keys.include?(key) }
+      contact_hash = {
+        "contact" => {
+          "name" => "#{current_person['first_name']} #{current_person['last_name']}",
+          "email" => current_person['email']
+        }
+        }
+      #current_person_json_parsed_filtered['login_id']=JSON.parse(current_user_json)['login']
+      #sender_part = {contact: current_person_json_parsed_filtered }
+      payload_project_merged = contact_hash.merge(project_transformed_update_hash)
+      payload_project_merged
+      aaa
     end
   end
 
