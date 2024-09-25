@@ -180,7 +180,6 @@ module Nfdi4Health
       #sender_part = {contact: current_person_json_parsed_filtered }
       payload_project_merged = contact_hash.merge(project_transformed_update_hash)
       payload_project_merged
-      aaa
     end
   end
 
