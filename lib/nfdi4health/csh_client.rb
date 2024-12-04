@@ -19,6 +19,14 @@ module Nfdi4Health
       @endpoint = RestClient::Request.execute(method: :post, url: @url_publish, payload: project_transformed, headers: headers)
     end
 
+    def publish_csh_confirm(id,token)
+      headers = { content_type: 'application/json',Content_Length: '0'  ,Host: 'csh.nfdi4health.de', Authorization: 'Bearer ' + token
+      }
+
+      @endpoint = RestClient::Request.execute(method: :post, url: "#{@url_publish}#{id}/publish", headers: headers)
+
+    end
+
     def send_transforming_api(project)
       @transformed = RestClient::Request.execute(method: :post, url: @url,payload: project, headers: { content_type: :json, accept: :json }).body
     end
@@ -75,6 +83,25 @@ module Nfdi4Health
           "An unexpected error occurred: #{e.response}"
         end
       when 'publish_csh'
+        case e.response.code
+        when 200
+          'pub_csh:CODE200- No new draft version created because uploaded resource contains no changes'
+        when 400
+          'pub_csh:CODE400- Bad Request: The server could not understand the request.'
+        when 401
+          'pub_csh:CODE401- Not allowed to edit resource. User must either be the original creator of the resource or have been added as a collaborator.'
+        when 403
+          'pub_csh:CODE403- Forbidden: You do not have the necessary permissions to access this resource.'
+        when 404
+          'pub_csh:CODE404- Not Found: The requested resource could not be found.'
+        when 422
+          "#{JSON.parse(JSON.parse(e.response.to_json))['error']['message']}. Error(s) caused by: #{JSON.parse(JSON.parse(e.response.to_json))['error']['paths']}"
+        when 500
+          'pub_csh:CODE500- Internal Server Error: The server encountered an error and could not complete your request.'
+        else
+          "An unexpected error occurred: #{e.response}"
+        end
+      when 'confirm_publish_csh'
         case e.response.code
         when 200
           'pub_csh:CODE200- No new draft version created because uploaded resource contains no changes'
