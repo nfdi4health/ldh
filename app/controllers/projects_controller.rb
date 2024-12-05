@@ -545,7 +545,7 @@ class ProjectsController < ApplicationController
     @project = Project.find(params[:id])
 
     data_project = Nfdi4Health::Preparation_json.new
-    transforming_api_data = data_project.transforming_api(@project, ProjectSerializer, 'Projects')
+    transforming_api_data = data_project.transforming_api(@project, ProjectSerializer, 'projects')
     begin
       endpoints = Nfdi4Health::Client.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
@@ -662,12 +662,13 @@ class ProjectsController < ApplicationController
       end
       return
     end
+
     if !JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource'].nil?
       identifier = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource']['identifier']
       if !sender_project_merged['resource']['identifier'].nil?
-        flash[:notice] ="#{t('project')} was successfully updated with ID #{identifier}."
+        flash[:notice] ="#{t('project')} was successfully updated with ID #{identifier}. Your data is still incomplete. Please consider the error message"
       else
-        flash[:notice] ="#{t('project')} was successfully published with ID #{identifier}."
+        flash[:notice] ="#{t('project')} was successfully created with ID #{identifier}. Your data is still incomplete. Please consider the error message"
         em = @project.extended_metadata
         jem = JSON.parse(em.json_metadata)
         jem['Resource_identifier_Project'] = identifier
@@ -676,6 +677,48 @@ class ProjectsController < ApplicationController
     else
       flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
     end
+
+    #csh confirm post request with ID
+    begin
+
+      endpoints.publish_csh_confirm(identifier,one_time_token)
+
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,'confirm_publish_csh')
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    flash[:notice] ="#{t('project')} was successfully confirmed to be published with ID #{identifier}. Your submission will be checked by a data steward. Afterward you will be notified by email."
+
 
     respond_to do |format|
       format.html { redirect_to(@project) }
