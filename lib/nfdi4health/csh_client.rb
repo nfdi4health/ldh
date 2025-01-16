@@ -1,4 +1,5 @@
 require 'rest-client'
+require 'uri'
 
 module Nfdi4Health
 
@@ -13,14 +14,14 @@ module Nfdi4Health
     end
     def publish_csh(project_transformed,token)
       content_length = project_transformed.bytesize
-      headers = { content_type: 'application/json',Content_Length: content_length  ,Host: 'csh.nfdi4health.de', Authorization: 'Bearer ' + token
+      headers = { content_type: 'application/json',Content_Length: content_length  ,Host: "#{URI.parse(@url_publish).host}", Authorization: 'Bearer ' + token
       }
 
       @endpoint = RestClient::Request.execute(method: :post, url: @url_publish, payload: project_transformed, headers: headers)
     end
 
     def publish_csh_confirm(id,token)
-      headers = { content_type: 'application/json',Content_Length: '0'  ,Host: 'csh.nfdi4health.de', Authorization: 'Bearer ' + token
+      headers = { content_type: 'application/json',Content_Length: '0'  ,Host: "#{URI.parse(@url_publish).host}", Authorization: 'Bearer ' + token
       }
 
       @endpoint = RestClient::Request.execute(method: :post, url: "#{@url_publish}#{id}/publish", headers: headers)
