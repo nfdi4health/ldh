@@ -1,8 +1,18 @@
 <% extended_metadata_type.extended_metadata_attributes.each do |attribute| %>
-  <div class="form-group">
-    <%= extended_metadata_form_field_for_attribute(attribute,resource, parent_resource) %>
+  <% attribute_value = resource.extended_metadata_attributes[attribute.id] rescue nil %>
+
+  <div class="form-group"
+       data-attribute-title="<%= attribute.title %>"
+       data-attribute-value="<%= attribute_value %>">
+    <%= extended_metadata_form_field_for_attribute(attribute, resource, parent_resource) %>
     <% unless attribute.description.nil? %>
       <%= extended_metadata_attribute_description(attribute.description) %>
     <% end %>
   </div>
 <% end %>
+
+<script>
+    $j(document).ready(function () {
+        MDS.hide_field();
+    });
+</script>
