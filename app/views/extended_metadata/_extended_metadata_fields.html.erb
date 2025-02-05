@@ -1,8 +1,11 @@
+<% all_values = resource.extended_metadata.to_json rescue nil %>
+
 <% extended_metadata_type.extended_metadata_attributes.each do |attribute| %>
   <% attribute_value = resource.extended_metadata_attributes[attribute.id] rescue nil %>
 
   <div class="form-group"
        data-attribute-title="<%= attribute.title %>"
+       data-attribute-all='<%= all_values %>'
        data-attribute-value="<%= attribute_value %>">
     <%= extended_metadata_form_field_for_attribute(attribute, resource, parent_resource) %>
     <% unless attribute.description.nil? %>
@@ -15,4 +18,8 @@
     $j(document).ready(function () {
         MDS.hide_field();
     });
+    $j(document).on("change", "#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project", function () {
+        MDS.hide_field();
+    });
 </script>
+
