@@ -11,13 +11,13 @@ module ExtendedMetadataHelper
     end
 
     if attribute.linked_extended_metadata? || attribute.linked_extended_metadata_multi?
-      content_tag(:span, class: 'linked_extended_metdata') do
+      content_tag(:span, id: attribute.title, class: 'linked_extended_metdata') do
         folding_panel(attribute.label, false, id:attribute.title) do
             attribute_form_element(attribute, resource.extended_metadata.get_attribute_value(attribute.title), element_name, element_class)
         end
       end
     else
-      content_tag(:label,attribute.label, class: attribute.required? ? 'required' : '') +
+      content_tag(:label,attribute.label, id: attribute.title, class: attribute.required? ? 'required' : '') +
         attribute_form_element(attribute, resource.extended_metadata.get_attribute_value(attribute.title), element_name, element_class)
     end
   end

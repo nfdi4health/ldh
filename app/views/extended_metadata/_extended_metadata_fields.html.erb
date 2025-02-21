@@ -1,13 +1,6 @@
-<% all_values = resource.extended_metadata.to_json rescue nil %>
-
 <% extended_metadata_type.extended_metadata_attributes.each do |attribute| %>
-  <% attribute_value = resource.extended_metadata_attributes[attribute.id] rescue nil %>
-
-  <div class="form-group"
-       data-attribute-title="<%= attribute.title %>"
-       data-attribute-all='<%= all_values %>'
-       data-attribute-value="<%= attribute_value %>">
-    <%= extended_metadata_form_field_for_attribute(attribute, resource, parent_resource) %>
+  <div id=<%= attribute.title.parameterize %> class="form-group">
+    <%= extended_metadata_form_field_for_attribute(attribute,resource, parent_resource) %>
     <% unless attribute.description.nil? %>
       <%= extended_metadata_attribute_description(attribute.description) %>
     <% end %>
@@ -16,10 +9,41 @@
 
 <script>
     $j(document).ready(function () {
-        MDS.hide_field();
-    });
-    $j(document).on("change", "#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project", function () {
-        MDS.hide_field();
-    });
-</script>
+      $j('#resource_identifier_project').hide();
+      $j('#resource_contributors_organisational_project_0').hide();
+      $j('#resource_contributors_personal_project_0').hide();
+      $j('#Design_Project').hide();
+      $j('#resource_nutritionaldata_project').hide();
+      $j('#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project').on('change', function () {
+          var selectedValues = $j(this).val();
+          var selectedidx = $j(this).index();
+          console.log(selectedidx)
+          if (!selectedValues || selectedValues.length === 0) {
+              $j('#Design_Project').hide();
+          }
+        else if (selectedValues.includes("Study") || selectedValues.includes("Substudy") || selectedValues.includes("Registry") || selectedValues.includes("Secondary data source")) {
+              $j('#Design_Project').show();
+          } else {
+              $j('#Design_Project').hide();
+          }
+      });
+      var idx = 0; {
+      $j('#project_extended_metadata_attributes_data_Resource_contributors_Project_'+ idx.toString() +'_Resource_contributors_nameType_Project').on('change', function () {
+          var selectedValues = $j(this).val();
+          var selectedidx = $j('#project_extended_metadata_attributes_data_Resource_contributors_Project-role-'+ idx.toString()).index();
+          console.log(selectedidx)
+          if (!selectedValues || selectedValues.length === 0) {
+              $j('#Resource_contributors_personal_Project').hide();
+              $j('#Resource_contributors_organisational_Project').hide();
+          }
+        else if (selectedValues.includes("Persaonal")) {
+              $j('#Resource_contributors_personal_Project').show();
+          } else {
+              $j('#Resource_contributors_organisational_Project').show();
+          }
+      });
+      }
 
+    });
+
+</script>
