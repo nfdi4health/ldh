@@ -43,5 +43,27 @@
                 $j(`#resource_contributors_personal_project_${index}`).hide();
             }
         });
+
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType === 1) {
+                        var newPanels = $j(node).find('[id^="project_extended_metadata_attributes_data_Resource_contributors_Project_"]');
+                        newPanels.each(function () {
+                            var id = $j(this).attr('id');
+                            var indexMatch = id.match(/Project_(\d+)_/);
+                            if (indexMatch) {
+                                var index = indexMatch[1];
+                                $j(`#resource_contributors_organisational_project_${index}`).hide();
+                                $j(`#resource_contributors_personal_project_${index}`).hide();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
     });
 </script>
+
