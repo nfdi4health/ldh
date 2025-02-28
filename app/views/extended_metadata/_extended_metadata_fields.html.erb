@@ -9,41 +9,39 @@
 
 <script>
     $j(document).ready(function () {
-      $j('#resource_identifier_project').hide();
-      $j('#resource_contributors_organisational_project_0').hide();
-      $j('#resource_contributors_personal_project_0').hide();
-      $j('#Design_Project').hide();
-      $j('#resource_nutritionaldata_project').hide();
-      $j('#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project').on('change', function () {
-          var selectedValues = $j(this).val();
-          var selectedidx = $j(this).index();
-          console.log(selectedidx)
-          if (!selectedValues || selectedValues.length === 0) {
-              $j('#Design_Project').hide();
-          }
-        else if (selectedValues.includes("Study") || selectedValues.includes("Substudy") || selectedValues.includes("Registry") || selectedValues.includes("Secondary data source")) {
-              $j('#Design_Project').show();
-          } else {
-              $j('#Design_Project').hide();
-          }
-      });
-      var idx = 0; {
-      $j('#project_extended_metadata_attributes_data_Resource_contributors_Project_'+ idx.toString() +'_Resource_contributors_nameType_Project').on('change', function () {
-          var selectedValues = $j(this).val();
-          var selectedidx = $j('#project_extended_metadata_attributes_data_Resource_contributors_Project-role-'+ idx.toString()).index();
-          console.log(selectedidx)
-          if (!selectedValues || selectedValues.length === 0) {
-              $j('#Resource_contributors_personal_Project').hide();
-              $j('#Resource_contributors_organisational_Project').hide();
-          }
-        else if (selectedValues.includes("Persaonal")) {
-              $j('#Resource_contributors_personal_Project').show();
-          } else {
-              $j('#Resource_contributors_organisational_Project').show();
-          }
-      });
-      }
+        $j('#resource_identifier_project').hide();
+        $j('#resource_contributors_organisational_project_0').hide();
+        $j('#resource_contributors_personal_project_0').hide();
+        $j('#Design_Project').hide();
+        $j('#resource_nutritionaldata_project').hide();
 
+        $j('#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project').on('change', function () {
+            var selectedValues = $j(this).val();
+            if (!selectedValues || selectedValues.length === 0) {
+                $j('#Design_Project').hide();
+            } else if (selectedValues.includes("Study") || selectedValues.includes("Substudy") || selectedValues.includes("Registry") || selectedValues.includes("Secondary data source")) {
+                $j('#Design_Project').show();
+            } else {
+                $j('#Design_Project').hide();
+            }
+        });
+
+        $j(document).on('change', '[id^="project_extended_metadata_attributes_data_Resource_contributors_Project_"][id$="_Resource_contributors_nameType_Project"]', function () {
+            var id = $j(this).attr('id');
+            var index = id.match(/Project_(\d+)_Resource_contributors_nameType_Project/)[1];
+
+            var selectedValues = $j(this).val();
+
+            if (!selectedValues || selectedValues.length === 0) {
+                $j(`#resource_contributors_organisational_project_${index}`).hide();
+                $j(`#resource_contributors_personal_project_${index}`).hide();
+            } else if (selectedValues.includes("Personal")) {
+                $j(`#resource_contributors_personal_project_${index}`).show();
+                $j(`#resource_contributors_organisational_project_${index}`).hide();
+            } else {
+                $j(`#resource_contributors_organisational_project_${index}`).show();
+                $j(`#resource_contributors_personal_project_${index}`).hide();
+            }
+        });
     });
-
 </script>
