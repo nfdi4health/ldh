@@ -140,7 +140,7 @@ end
   test 'when creating an item, can not publish the item if associate to it the project which has gatekeeper' do
     gatekeeper = FactoryBot.create(:asset_gatekeeper)
     a_person = FactoryBot.create(:person)
-    sop = Sop.new
+    sop = FactoryBot.create(:sop, contributor: a_person)
 
     login_as(a_person.user)
     assert sop.can_manage?
@@ -151,7 +151,7 @@ end
 
   test 'when creating an item, can publish the item if associate to it the project which has no gatekeeper' do
     a_person = FactoryBot.create(:person)
-    sop = Sop.new
+    sop = FactoryBot.create(:sop, contributor: a_person)
 
     login_as(a_person.user)
     assert sop.can_manage?
@@ -189,7 +189,7 @@ end
 
   test 'can publish assay without study' do
     a_person = FactoryBot.create(:person)
-    assay = Assay.new
+    assay = FactoryBot.create(:assay, study: nil, contributor: a_person)
 
     login_as(a_person.user)
     assert assay.can_manage?
@@ -204,8 +204,7 @@ end
     a_person = FactoryBot.create(:person, project: gatekeeper.projects.first)
     inv = FactoryBot.create(:investigation, contributor: gatekeeper)
     study = FactoryBot.create(:study, investigation: inv, contributor: gatekeeper)
-    assay = Assay.new
-    assay.study = study
+    assay = FactoryBot.create(:assay, study: study, contributor: a_person)
 
     assert_equal assay.projects, gatekeeper.projects
     login_as(a_person.user)
@@ -245,18 +244,36 @@ end
   test 'additional permissions and privilege text for preview permission' do
     # no additional text
     post :preview_permissions, params: { policy_attributes: { access_type: Policy::NO_ACCESS }, resource_name: 'assay' }
+    assert_response :success
+    assert_select 'p.private', text: "This #{I18n.t('assay')} is hidden from public view."
 
     # with additional text for permissions
     project = FactoryBot.create(:project)
     post :preview_permissions, params: { policy_attributes: projects_policy(Policy::VISIBLE, [project.id], Policy::ACCESSIBLE), resource_name: 'data_file', project_ids: project.id }
+    assert_response :success
+    assert_select 'h3', text: "Public Visibility"
+    assert_select 'p.public', text: "All visitors can view summary only."
+    assert_select 'h3', text: "Additionally..."
+    assert_select 'p', text: "The following can view summary and get contents"
 
     # with additional text for privileged people
     asset_manager = FactoryBot.create(:asset_housekeeper)
     post :preview_permissions, params: { policy_attributes: projects_policy(Policy::NO_ACCESS, [asset_manager.projects.first], Policy::ACCESSIBLE), resource_name: 'data_file', project_ids: asset_manager.projects.first.id }
+    assert_response :success
+    assert_select 'h3', text: "Public Visibility"
+    assert_select 'p.private', text: "This #{I18n.t('data_file')} is hidden from public view."
+    assert_select 'h3', text: "Additionally..."
+    assert_select 'p', text: "The following can view summary and get contents"
 
     # with additional text for both permissions and privileged people
     asset_manager = FactoryBot.create(:asset_housekeeper)
     post :preview_permissions, params: { policy_attributes: projects_policy(Policy::VISIBLE, [asset_manager.projects.first], Policy::ACCESSIBLE), resource_name: 'data_file', project_ids: asset_manager.projects.first.id }
+    assert_response :success
+    assert_select 'h3', text: "Public Visibility"
+    assert_select 'p.public', text: "All visitors can view summary only."
+    assert_select 'h3', text: "Additionally..."
+    assert_select 'p', text: "The following can view summary and get contents"
+
   end
 
   test 'should display download permissions as view for non-downloadable resource in permission preview' do

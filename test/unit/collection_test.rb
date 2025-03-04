@@ -20,15 +20,16 @@ class CollectionTest < ActiveSupport::TestCase
     refute_empty object.creators
 
     rdf = object.to_rdf
-
-    RDF::Reader.for(:rdfxml).new(rdf) do |reader|
-      assert reader.statements.count > 1
-      assert_equal RDF::URI.new("http://localhost:3000/collections/#{object.id}"), reader.statements.first.subject
-
-      #check for OPSK-1281 - where the creators weren't appearing
-      assert_includes reader.statements.collect(&:predicate),"http://jermontology.org/ontology/JERMOntology#hasCreator"
-      assert_includes reader.statements.collect(&:predicate),"http://rdfs.org/sioc/ns#has_creator"
+    graph = RDF::Graph.new do |graph|
+      RDF::Reader.for(:ttl).new(rdf) {|reader| graph << reader}
     end
+    assert graph.statements.count > 1
+    assert_equal RDF::URI.new("http://localhost:3000/collections/#{object.id}"), graph.statements.first.subject
+
+    #check for OPSK-1281 - where the creators weren't appearing
+    assert_includes graph.statements.collect(&:predicate),"http://jermontology.org/ontology/JERMOntology#hasCreator"
+    assert_includes graph.statements.collect(&:predicate),"http://rdfs.org/sioc/ns#has_creator"
+
   end
 
   test 'title trimmed' do
@@ -181,9 +182,9 @@ class CollectionTest < ActiveSupport::TestCase
     assert_empty collection.items
     assert_empty collection.assets
 
-    types = Seek::Util.persistent_classes.select { |c| c.name != 'Project' && c.name != 'Collection' && c.method_defined?(:collections) }
+    types = Seek::Util.persistent_classes.select { |c| !%w[Project Programme Collection].include?(c.name) && c.method_defined?(:collections) }
     types.each do |type|
-      opts = [type.name.underscore.to_sym]
+      opts = type.is_a?(SampleType.class) ? [:simple_sample_type] : [type.name.underscore.to_sym]
       opts << { policy: FactoryBot.create(:public_policy) } if type.method_defined?(:policy)
       asset = FactoryBot.create(*opts)
       assert_difference('CollectionItem.count', 1, "#{type.name} could not be added to collection") do
