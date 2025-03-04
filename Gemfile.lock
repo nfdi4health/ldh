@@ -984,7 +984,7 @@ GEM
       rails (>= 3.0)
       rake (>= 0.8.7)
     yard (0.9.37)
-    zeitwerk (2.6.18)
+    zeitwerk (2.7.1)
     zip-container (4.0.2)
       rubyzip (~> 2.0.0)
 
