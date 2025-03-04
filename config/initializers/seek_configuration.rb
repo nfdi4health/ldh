@@ -267,7 +267,8 @@ def load_seek_config_defaults!
   Seek::Config.default :git_support_enabled, false
   Seek::Config.default :bio_tools_enabled, false
   # NFDI4Health publish
-  Seek::Config.default :n4h_url, 'https://health-study-hub.de/'  Seek::Config.default :scraper_config, [
+  Seek::Config.default :n4h_url, 'https://health-study-hub.de/'
+  Seek::Config.default :scraper_config, [
     {
       project_title: 'iwc',
       class: 'IwcScraper',

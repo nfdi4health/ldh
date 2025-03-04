@@ -984,7 +984,7 @@ GEM
       rails (>= 3.0)
       rake (>= 0.8.7)
     yard (0.9.37)
-    zeitwerk (2.7.1)
+    zeitwerk (2.6.18)
     zip-container (4.0.2)
       rubyzip (~> 2.0.0)
 
@@ -1095,7 +1095,6 @@ DEPENDENCIES
   rails-static-router
   rails_autolink
   rails_best_practices
-  ransack
   rdf
   rdf-virtuoso (>= 0.2.0)
   rdf-vocab (~> 3.2.1)
