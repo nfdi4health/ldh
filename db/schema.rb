@@ -1147,8 +1147,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_12_145346) do
   end
 
   create_table "oauth_access_grants", force: :cascade do |t|
-    t.integer "resource_owner_id", null: false
-    t.integer "application_id", null: false
+    t.bigint "resource_owner_id", null: false
+    t.bigint "application_id", null: false
     t.string "token", null: false
     t.integer "expires_in", null: false
     t.text "redirect_uri", null: false
@@ -1163,8 +1163,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_12_145346) do
   end
 
   create_table "oauth_access_tokens", force: :cascade do |t|
-    t.integer "resource_owner_id"
-    t.integer "application_id", null: false
+    t.bigint "resource_owner_id"
+    t.bigint "application_id", null: false
     t.string "token", null: false
     t.string "refresh_token"
     t.integer "expires_in"
@@ -1205,7 +1205,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_12_145346) do
   end
 
   create_table "observation_unit_assets", id: false, force: :cascade do |t|
-    t.integer "observation_unit_id"
+    t.bigint "observation_unit_id"
     t.string "asset_type"
     t.integer "asset_id"
     t.index ["asset_type", "asset_id"], name: "index_observation_unit_assets_on_asset"
