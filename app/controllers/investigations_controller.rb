@@ -6,12 +6,13 @@ class InvestigationsController < ApplicationController
   include Seek::AssetsCommon
 
   before_action :investigations_enabled?
-  before_action :find_assets, :only=>[:index]
-  before_action :find_and_authorize_requested_item,:only=>[:edit, :manage, :update, :manage_update, :destroy, :show,:new_object_based_on_existing_one]
+  before_action :fair_data_station_enabled?, only: %i[update_from_fairdata_station submit_fairdata_station]
+  before_action :find_assets, only: [:index]
+  before_action :find_and_authorize_requested_item, only: [:edit, :manage, :update, :manage_update, :destroy, :show, :update_from_fairdata_station, :submit_fairdata_station, :new_object_based_on_existing_one]
 
   #project_membership_required_appended is an alias to project_membership_required, but is necesary to include the actions
   #defined in the application controller
-  before_action :project_membership_required_appended, :only=>[:new_object_based_on_existing_one]
+  before_action :project_membership_required_appended, only: [:new_object_based_on_existing_one]
 
   before_action :check_studies_are_for_this_investigation, only: %i[update]
 
@@ -19,7 +20,7 @@ class InvestigationsController < ApplicationController
 
   include Seek::AnnotationCommon
 
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
 
   api_actions :index, :show, :create, :update, :destroy
 
@@ -35,13 +36,37 @@ class InvestigationsController < ApplicationController
 
   end
 
+  def submit_fairdata_station
+    path = params[:datastation_data].path
+    data_station_inv = Seek::FairDataStation::Reader.new.parse_graph(path).first
+
+    begin
+      Investigation.transaction do
+        @investigation = Seek::FairDataStation::Writer.new.update_isa(@investigation, data_station_inv, current_person, @investigation.projects, @investigation.policy)
+        @investigation.save!
+      end
+    rescue ActiveRecord::RecordInvalid, Seek::FairDataStation::ExternalIdMismatchException => e
+      flash.now[:error] = e.message
+    end
+
+    if flash[:error].present?
+      respond_to do |format|
+        format.html { render action: :update_from_fairdata_station, status: :unprocessable_entity }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+      end
+    end
+  end
+
   def export_isatab_json
-    the_hash = IsaTabConverter.convert_investigation(Investigation.find(params[:id]))
+    the_hash = ISATabConverter.convert_investigation(Investigation.find(params[:id]))
     send_data JSON.pretty_generate(the_hash) , filename: 'isatab.json'
   end
 
   def export_isa
-    isa = IsaExporter::Exporter.new(Investigation.find(params[:id]), current_user).export
+    isa = ISAExporter::Exporter.new(Investigation.find(params[:id]), current_user).export
     send_data isa, filename: 'isa.json', type: 'application/json', deposition: 'attachment'
   rescue Exception => e
     respond_to do |format|
@@ -83,7 +108,7 @@ class InvestigationsController < ApplicationController
       respond_to do |format|
         flash[:notice] = "The #{t('investigation')} was successfully created."
         format.html { redirect_to params[:single_page] ?
-          single_page_path(id: params[:single_page], item_type: 'investigation', item_id: @investigation) 
+          single_page_path(id: params[:single_page], item_type: 'investigation', item_id: @investigation)
           : investigation_path(@investigation) }
         format.json { render json: @investigation }
       end
@@ -150,7 +175,7 @@ class InvestigationsController < ApplicationController
     transforming_api_data = data_investigation.transforming_api(@investigation, InvestigationSerializer, 'investigation')
 
     begin
-      endpoints = Nfdi4Health::Client.new()
+      endpoints = Nfdi4health::CshClient.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

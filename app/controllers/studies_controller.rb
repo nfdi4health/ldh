@@ -19,7 +19,7 @@ class StudiesController < ApplicationController
 
   include Seek::Publishing::PublishingCommon
   include Seek::AnnotationCommon
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
 
   api_actions :index, :show, :create, :update, :destroy
 
@@ -41,8 +41,12 @@ class StudiesController < ApplicationController
 
   def edit
     @study = Study.find(params[:id])
-    respond_to do |format|
-      format.html
+    if @study.is_isa_json_compliant?
+      redirect_to edit_isa_study_path(@study)
+    else
+      respond_to do |format|
+        format.html
+      end
     end
   end
 
@@ -359,7 +363,7 @@ class StudiesController < ApplicationController
     transforming_api_data = data_study.transforming_api(@study, StudySerializer, 'studies')
 
     begin
-      endpoints = Nfdi4Health::Client.new()
+      endpoints = Nfdi4health::CshClient.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

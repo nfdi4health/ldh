@@ -180,7 +180,7 @@ class SampleTest < ActiveSupport::TestCase
   test 'handling booleans' do
     sample = Sample.new title: 'testing', project_ids: [FactoryBot.create(:project).id]
     sample_type = FactoryBot.create(:simple_sample_type)
-    sample_type.sample_attributes << FactoryBot.create(:sample_attribute, title: 'bool', sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, is_title: false, sample_type: sample_type)
+    FactoryBot.create(:sample_attribute, title: 'bool', sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, is_title: false, sample_type: sample_type)
     sample_type.save!
     sample.sample_type = sample_type
 
@@ -275,7 +275,7 @@ class SampleTest < ActiveSupport::TestCase
     # with required attribute
     sample = Sample.new title: 'testing', project_ids: [FactoryBot.create(:project).id]
     sample_type = FactoryBot.create(:simple_sample_type)
-    sample_type.sample_attributes << FactoryBot.create(:sample_attribute, title: 'bool', sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: true, is_title: false, sample_type: sample_type)
+    FactoryBot.create(:sample_attribute, title: 'bool', sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: true, is_title: false, sample_type: sample_type)
     sample_type.save!
     sample.sample_type = sample_type
 
@@ -310,8 +310,8 @@ class SampleTest < ActiveSupport::TestCase
   test 'json metadata with awkward attributes' do
     person = FactoryBot.create(:person)
     sample_type = SampleType.new title: 'with awkward attributes', projects: person.projects, contributor: person
-    sample_type.sample_attributes << FactoryBot.create(:any_string_sample_attribute, title: 'title', is_title: true, sample_type: sample_type)
-    sample_type.sample_attributes << FactoryBot.create(:any_string_sample_attribute, title: 'updated_at', is_title: false, sample_type: sample_type)
+    FactoryBot.create(:any_string_sample_attribute, title: 'title', is_title: true, sample_type: sample_type)
+    FactoryBot.create(:any_string_sample_attribute, title: 'updated_at', is_title: false, sample_type: sample_type)
     assert sample_type.valid?
     sample = Sample.new title: 'testing', project_ids: [FactoryBot.create(:project).id]
     sample.sample_type = sample_type
@@ -436,8 +436,8 @@ class SampleTest < ActiveSupport::TestCase
   test 'sample with clashing attribute names' do
     person = FactoryBot.create(:person)
     sample_type = SampleType.new title: 'with awkward attributes', projects: person.projects, contributor: person
-    sample_type.sample_attributes << FactoryBot.create(:any_string_sample_attribute, title: 'freeze', is_title: true, sample_type: sample_type)
-    sample_type.sample_attributes << FactoryBot.create(:any_string_sample_attribute, title: 'updated_at', is_title: false, sample_type: sample_type)
+    FactoryBot.create(:any_string_sample_attribute, title: 'freeze', is_title: true, sample_type: sample_type)
+    FactoryBot.create(:any_string_sample_attribute, title: 'updated_at', is_title: false, sample_type: sample_type)
     assert sample_type.valid?
     sample_type.save!
     sample = Sample.new title: 'testing', project_ids: [FactoryBot.create(:project).id]
@@ -458,7 +458,7 @@ class SampleTest < ActiveSupport::TestCase
   test 'sample with clashing attribute names with private methods' do
     person = FactoryBot.create(:person)
     sample_type = SampleType.new title: 'with awkward attributes', projects: person.projects, contributor: person
-    sample_type.sample_attributes << FactoryBot.build(:any_string_sample_attribute, title: 'format', is_title: true, sample_type: sample_type)
+    FactoryBot.build(:any_string_sample_attribute, title: 'format', is_title: true, sample_type: sample_type)
     assert sample_type.valid?
     disable_authorization_checks { sample_type.save! }
     sample = Sample.new title: 'testing', project_ids: [FactoryBot.create(:project).id]
@@ -477,7 +477,7 @@ class SampleTest < ActiveSupport::TestCase
   test 'sample with clashing attribute names with dynamic rails methods' do
     person = FactoryBot.create(:person)
     sample_type = SampleType.new title: 'with awkward attributes', projects: person.projects, contributor: person
-    sample_type.sample_attributes << FactoryBot.create(:any_string_sample_attribute, title: 'title_before_last_save', is_title: true, sample_type: sample_type)
+    FactoryBot.create(:any_string_sample_attribute, title: 'title_before_last_save', is_title: true, sample_type: sample_type)
     assert sample_type.valid?
     disable_authorization_checks { sample_type.save! }
     sample = Sample.new title: 'testing', project_ids: [FactoryBot.create(:project).id]
@@ -584,12 +584,12 @@ class SampleTest < ActiveSupport::TestCase
 
   test 'strain attributes can appear as related items' do
     sample_type = FactoryBot.create(:strain_sample_type)
-    sample_type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'seekstrain2',
-                                                                      sample_attribute_type: FactoryBot.create(:strain_sample_attribute_type),
-                                                                      required: true, sample_type: sample_type)
-    sample_type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'seekstrain3',
-                                                                      sample_attribute_type: FactoryBot.create(:strain_sample_attribute_type),
-                                                                      required: true, sample_type: sample_type)
+    FactoryBot.build(:sample_attribute, title: 'seekstrain2',
+                     sample_attribute_type: FactoryBot.create(:strain_sample_attribute_type),
+                     required: true, sample_type: sample_type)
+    FactoryBot.build(:sample_attribute, title: 'seekstrain3',
+                     sample_attribute_type: FactoryBot.create(:strain_sample_attribute_type),
+                     required: true, sample_type: sample_type)
     strain = FactoryBot.create(:strain)
     strain2 = FactoryBot.create(:strain)
 
@@ -669,12 +669,11 @@ class SampleTest < ActiveSupport::TestCase
   test 'sample responds to correct methods' do
     person = FactoryBot.create(:person)
     sample_type = SampleType.new(title: 'Custom', projects: person.projects, contributor: person)
-    attribute1 = FactoryBot.create(:any_string_sample_attribute, title: 'banana_type',
-                                                       is_title: true, sample_type: sample_type)
-    attribute2 = FactoryBot.create(:any_string_sample_attribute, title: 'license',
-                                                       sample_type: sample_type)
-    sample_type.sample_attributes << attribute1
-    sample_type.sample_attributes << attribute2
+    FactoryBot.create(:any_string_sample_attribute, title: 'banana_type',
+                      is_title: true, sample_type: sample_type)
+    FactoryBot.create(:any_string_sample_attribute, title: 'license',
+                      sample_type: sample_type)
+
     assert sample_type.valid?
     disable_authorization_checks { sample_type.save! }
     sample = Sample.new(title: 'testing', project_ids: [FactoryBot.create(:project).id])
@@ -985,11 +984,10 @@ class SampleTest < ActiveSupport::TestCase
     org5 = FactoryBot.create(:organism, bioportal_concept: nil)
 
     sample_type = FactoryBot.create(:simple_sample_type)
-    sample_type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'ncbi',
-                                                                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
-                                                                      required: false,
-                                                                      sample_type: sample_type)
-    sample_type.save!
+    FactoryBot.create(:sample_attribute, title: 'ncbi',
+                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
+                      required: false,
+                      sample_type: sample_type)
 
     contributor = FactoryBot.create(:person)
     User.with_current_user(contributor.user) do
@@ -1033,14 +1031,14 @@ class SampleTest < ActiveSupport::TestCase
 
     # shouldn't be duplicates
     sample_type = FactoryBot.create(:simple_sample_type)
-    sample_type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'ncbi',
-                                                                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
-                                                                      required: true,
-                                                                      sample_type: sample_type)
-    sample_type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'ncbi2',
-                                                                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
-                                                                      required: true,
-                                                                      sample_type: sample_type)
+    FactoryBot.create(:sample_attribute, title: 'ncbi',
+                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
+                      required: true,
+                      sample_type: sample_type)
+    FactoryBot.create(:sample_attribute, title: 'ncbi2',
+                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
+                      required: true,
+                      sample_type: sample_type)
     sample_type.save!
     User.with_current_user(contributor.user) do
       sample = Sample.new(sample_type: sample_type, project_ids: [contributor.projects.first.id], contributor: contributor)
@@ -1054,10 +1052,10 @@ class SampleTest < ActiveSupport::TestCase
 
     # handles capitalized attribute name
     sample_type = FactoryBot.create(:simple_sample_type)
-    sample_type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'NcBi',
-                                                                      sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
-                                                                      required: true,
-                                                                      sample_type: sample_type)
+    FactoryBot.build(:sample_attribute, title: 'NcBi',
+                     sample_attribute_type: FactoryBot.create(:ncbi_id_sample_attribute_type),
+                     required: true,
+                     sample_type: sample_type)
     sample_type.save!
     User.with_current_user(contributor.user) do
       sample = Sample.new(sample_type: sample_type, project_ids: [contributor.projects.first.id], contributor: contributor)
@@ -1113,6 +1111,31 @@ class SampleTest < ActiveSupport::TestCase
     sample.reload
     expected = {'id':df.id,type:'DataFile',title:df.title}.with_indifferent_access
     assert_equal expected, sample.get_attribute_value('data file')
+
+  end
+
+  test 'sop sample' do
+    project = FactoryBot.create(:project)
+    sample_type = FactoryBot.create(:sop_sample_type, project_ids:[project.id])
+    sample = Sample.new(sample_type: sample_type, project_ids: [project.id])
+    sop = FactoryBot.create(:sop)
+
+    sample.update(data:{'sop':sop.id})
+    assert sample.valid?
+    sample.save!
+
+    sample.reload
+    expected = {id:sop.id,type:'Sop',title:sop.title}.with_indifferent_access
+    assert_equal expected, sample.get_attribute_value('sop')
+
+    sample = Sample.new(sample_type: sample_type, project_ids: [project.id])
+    sample.set_attribute_value('sop',sop.id)
+    assert sample.valid?
+    sample.save!
+
+    sample.reload
+    expected = {'id':sop.id,type:'Sop',title:sop.title}.with_indifferent_access
+    assert_equal expected, sample.get_attribute_value('sop')
 
   end
 
@@ -1356,8 +1379,8 @@ class SampleTest < ActiveSupport::TestCase
     project = FactoryBot.create(:project)
     simple_type = FactoryBot.create(:simple_sample_type, project_ids: [project.id])
     type_with_df_attr = FactoryBot.create(:data_file_sample_type, project_ids: [project.id])
-    df_attr = FactoryBot.build(:data_file_sample_attribute, title: 'data file 2', sample_type: type_with_df_attr)
-    type_with_df_attr.sample_attributes << df_attr
+    FactoryBot.create(:data_file_sample_attribute, title: 'data file 2', sample_type: type_with_df_attr)
+
     df1 = FactoryBot.create(:data_file)
     df2 = FactoryBot.create(:data_file)
     df3 = FactoryBot.create(:data_file)
@@ -1382,4 +1405,67 @@ class SampleTest < ActiveSupport::TestCase
     assert_equal [df1, df2, df3].sort_by(&:id), sample_ext_attr.related_data_files.sort_by(&:id)
   end
 
+  test 'related sops includes sops in attributes' do
+    project = FactoryBot.create(:project)
+
+    sample_type = FactoryBot.create(:sop_sample_type, project_ids: [project.id])
+    FactoryBot.build(:sop_sample_attribute, title: 'sop 2', sample_type: sample_type)
+
+    sop1 = FactoryBot.create(:sop)
+    sop2 = FactoryBot.create(:sop)
+
+    # Sample with no linked sops
+    simple_type = FactoryBot.create(:simple_sample_type, project_ids: [project.id])
+    sample_no_sop = Sample.new(sample_type: simple_type, project_ids: [project.id])
+
+    # Sample with linked sops
+    sample_with_sops = Sample.new(sample_type: sample_type, project_ids: [project.id])
+    sample_with_sops.update(data: { 'sop': sop1.id })
+    sample_with_sops.update(data: { 'sop 2': sop2.id })
+    sample_with_sops.save!
+
+
+    assert_equal [], sample_no_sop.related_sops
+    assert_equal [sop1, sop2].sort_by(&:id), sample_with_sops.related_sops.sort_by(&:id)
+  end
+
+  test 'to rdf' do
+    sample = FactoryBot.create(:sample, sample_type:FactoryBot.create(:fairdatastation_virtual_demo_sample_type),
+                               data:{
+                                 'Title':'the title',
+                                 'Description':'the description',
+                                 'Host':'the host',
+                                 'Occupation':'the occupation'
+                               })
+    assert sample.rdf_supported?
+    rdf = sample.to_rdf
+    graph = RDF::Graph.new do |graph|
+      RDF::Reader.for(:ttl).new(rdf) {|reader| graph << reader}
+    end
+    assert graph.statements.count > 1
+    assert_equal RDF::URI.new("http://localhost:3000/samples/#{sample.id}"), graph.statements.first.subject
+    match = graph.statements.detect{|s| s.predicate == RDF.type}
+    assert_equal RDF::URI('http://jermontology.org/ontology/JERMOntology#Sample'), match.object
+    match = graph.statements.detect{|s| s.predicate == RDF::URI('http://fairbydesign.nl/ontology/host')}
+    assert_equal RDF::Literal('the host'), match.object
+    match = graph.statements.detect{|s| s.predicate == RDF::URI('http://fairbydesign.nl/ontology/occupation')}
+    assert_equal RDF::Literal('the occupation'), match.object
+    match = graph.statements.detect{|s| s.predicate == RDF::URI('http://fairbydesign.nl/ontology/marital_status')}
+    assert_equal RDF::Literal(''), match.object
+
+  end
+
+  test 'add sample to a locked sample type' do
+    person = FactoryBot.create(:person)
+    sample_type = FactoryBot.create(:simple_sample_type, project_ids: [FactoryBot.create(:project).id], contributor: person)
+
+    # lock the sample type by adding a fake update task
+    UpdateSampleMetadataJob.perform_later(sample_type, person.user, [])
+    assert sample_type.locked?
+
+    assert_no_difference('Sample.count') do
+      sample = Sample.create(sample_type: sample_type, project_ids: [sample_type.projects.first.id])
+      sample.errors.added?(:sample_type, 'is locked')
+    end
+  end
 end

@@ -1,4 +1,3 @@
-require 'seek/custom_exception'
 require 'zip'
 require 'securerandom'
 require 'json'
@@ -13,16 +12,22 @@ class ProjectsController < ApplicationController
   include Seek::Projects::Population
   include Seek::AnnotationCommon
 
+  before_action :fair_data_station_enabled?, only:[:import_from_fairdata_station, :submit_fairdata_station]
+  before_action :observation_units_enabled?, only:[:import_from_fairdata_station, :submit_fairdata_station]
+  before_action :investigations_enabled?, only:[:import_from_fairdata_station, :submit_fairdata_station]
+
   before_action :login_required, only: [:guided_join, :guided_create, :guided_import, :request_join, :request_create, :request_import,
                                         :administer_join_request, :respond_join_request,
                                         :administer_create_project_request, :respond_create_project_request,
                                         :administer_import_project_request, :respond_import_project_request,
+                                        :import_from_fairdata_station, :submit_fairdata_station,
                                         :project_join_requests, :project_creation_requests, :project_importation_requests, :typeahead]
 
   before_action :find_requested_item, only: %i[show admin edit update destroy admin_members
                                                asset_report populate populate_from_spreadsheet
                                                admin_member_roles update_members storage_report
-                                               overview administer_join_request respond_join_request]
+                                               overview administer_join_request respond_join_request
+                                               import_from_fairdata_station submit_fairdata_station]
 
   before_action :has_spreadsheets, only: %i[:populate populate_from_spreadsheet]
 
@@ -32,7 +37,7 @@ class ProjectsController < ApplicationController
   before_action :check_investigations_are_for_this_project, only: %i[update]
   before_action :administerable_by_user, only: %i[admin admin_members admin_member_roles destroy update_members storage_report administer_join_request respond_join_request populate populate_from_spreadsheet]
 
-  before_action :member_of_this_project, only: [:asset_report], unless: :admin_logged_in?
+  before_action :member_of_this_project, only: [:asset_report, :import_from_fairdata_station, :submit_fairdata_station], unless: :admin_logged_in?
 
   before_action :validate_message_log_for_join, only: [:administer_join_request, :respond_join_request]
   before_action :validate_message_log_for_create, only: [:administer_create_project_request, :respond_create_project_request]
@@ -45,7 +50,7 @@ class ProjectsController < ApplicationController
 
   cache_sweeper :projects_sweeper, only: %i[update create destroy]
 
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
 
   respond_to :html, :json
 
@@ -102,6 +107,7 @@ class ProjectsController < ApplicationController
   end
 
   def guided_import
+    @institution = Institution.new
     respond_to do |format|
       format.html
     end
@@ -196,6 +202,29 @@ class ProjectsController < ApplicationController
     respond_to do |format|
       format.html
     end
+  end
+
+  def submit_fairdata_station
+    path = params[:datastation_data].path
+    policy = Policy.new
+    policy.set_attributes_with_sharing(policy_params)
+    fair_data_station_inv = Seek::FairDataStation::Reader.new.parse_graph(path).first
+    @existing_investigation = Investigation.by_external_identifier(fair_data_station_inv.external_id,[@project])
+
+    if @existing_investigation
+      flash.now[:error] = "An #{t('investigation')} with that external identifier already exists for this #{t('project')}"
+      respond_to do |format|
+        format.html { render action: :import_from_fairdata_station, status: :unprocessable_entity }
+      end
+    else
+      @investigation = Seek::FairDataStation::Writer.new.construct_isa(fair_data_station_inv, current_person, [@project], policy)
+      @investigation.save!
+
+      respond_to do |format|
+        format.html { redirect_to(@investigation) }
+      end
+    end
+
   end
 
   def request_create
@@ -547,7 +576,7 @@ class ProjectsController < ApplicationController
     data_project = Nfdi4Health::Preparation_json.new
     transforming_api_data = data_project.transforming_api(@project, ProjectSerializer, 'projects')
     begin
-      endpoints = Nfdi4Health::Client.new()
+      endpoints = Nfdi4health::CshClient.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

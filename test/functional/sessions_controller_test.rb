@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'sessions_controller'
 
 # Re-raise errors caught by the controller.
 class SessionsController; def rescue_action(e)
@@ -123,18 +122,11 @@ class SessionsControllerTest < ActionController::TestCase
     assert_redirected_to register_people_path
   end
 
-  test 'should redirect to root after logging out from the search result page' do
-    login_as :quentin
-    @request.env['HTTP_REFERER'] = search_url
-    get :destroy
-    assert_redirected_to :root
-  end
-
-  test 'should redirect to back after logging out from the page excepting search result page' do
+  test 'should redirect to root after logging out' do
     login_as :quentin
     @request.env['HTTP_REFERER'] = data_files_url
     get :destroy
-    assert_redirected_to data_files_url
+    assert_redirected_to :root
   end
 
   test 'should redirect to root after logging in from the search result page' do

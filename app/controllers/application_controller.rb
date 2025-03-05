@@ -362,7 +362,7 @@ class ApplicationController < ActionController::Base
                              culprit: current_user,
                              controller_name: controller_name,
                              user_agent: user_agent,
-                             data: { search_query: object, result_count: @results.count })
+                             data: { search_query: object.inspect, result_count: @results.count })
         end
       when 'content_blobs'
         # action download applies for normal download
@@ -390,7 +390,9 @@ class ApplicationController < ActionController::Base
         action = 'update' if action == 'create_version'
         action = 'inline_view' if action == 'explore'
         action = 'download' if action == 'ro_crate'
-        if %w(show create update destroy download inline_view).include?(action)
+        action = 'run' if action == 'simulate'
+        action = 'run' if action == 'copasi_simulate'
+        if %w(show create update destroy download inline_view run).include?(action)
           check_log_exists(action, controller_name, object)
           ActivityLog.create(action: action,
                              culprit: current_user,
@@ -525,7 +527,7 @@ class ApplicationController < ActionController::Base
   end
 
   def json_api_request?
-    request.format.json?
+    request.format.json? || (request.media_type && Mime::Type.lookup(request.media_type)&.json?)
   end
 
   # filter that responds with :not_acceptable if request rdf for non rdf capable resource
@@ -544,7 +546,8 @@ class ApplicationController < ActionController::Base
     hash[:errors] = object.errors.map do |error|
       segments = error.attribute.to_s.split('.')
       attr = segments.first
-      if !['content_blobs', 'policy'].include?(attr) && object.class.reflect_on_association(attr)
+      if !['content_blobs', 'policy'].include?(attr) &&
+        object.class.respond_to?(:reflect_on_association) && object.class.reflect_on_association(attr)
         base = '/data/relationships'
       else
         base = '/data/attributes'

@@ -20,9 +20,11 @@ class EventTest < ActiveSupport::TestCase
   test 'publication association' do
     assert @event.publications.empty?
     publication = FactoryBot.create(:publication)
-    @event.publications << publication
-    assert @event.valid?
-    assert @event.save
+    disable_authorization_checks do
+      @event.publications << publication
+      assert @event.valid?
+      assert @event.save
+    end
     assert_equal 1, @event.publications.count
   end
 
@@ -203,8 +205,8 @@ class EventTest < ActiveSupport::TestCase
       event.save!
     end
 
-    assert_equal start_date.to_s(:db).in_time_zone(new_time_zone), event.start_date
-    assert_equal end_date.to_s(:db).in_time_zone(new_time_zone), event.end_date
+    assert_equal start_date.to_fs(:db).in_time_zone(new_time_zone), event.start_date
+    assert_equal end_date.to_fs(:db).in_time_zone(new_time_zone), event.end_date
   end
 
   test 'should not shift times on subsequent saves' do

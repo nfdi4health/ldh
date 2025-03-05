@@ -67,13 +67,13 @@ end
 
   validates :doi, format: { with: VALID_DOI_REGEX, message: 'is invalid' }, allow_blank: true
   validates :pubmed_id, numericality: { greater_than: 0, message: 'is invalid' }, allow_blank: true
-  validates :publication_type_id, presence: true, on: :create
+  validates :publication_type, presence: true, on: :create
 
   validate :check_uniqueness_within_project
 
   attr_writer :refresh_policy
   before_update :refresh_policy
-  after_update :update_creators_from_publication_authors
+  after_save :update_creators_from_publication_authors
 
   accepts_nested_attributes_for :publication_authors
 
@@ -168,6 +168,10 @@ end
   end
 
   def contributor_credited?
+    false
+  end
+
+  def self.supports_extended_metadata?
     false
   end
 
