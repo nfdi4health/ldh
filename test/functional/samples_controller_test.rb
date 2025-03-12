@@ -150,9 +150,11 @@ class SamplesControllerTest < ActionController::TestCase
   test 'create and update with boolean from form' do
     person = FactoryBot.create(:person)
     login_as(person)
+
     type = FactoryBot.create(:simple_sample_type, policy: FactoryBot.create(:public_policy))
     type.sample_attributes << FactoryBot.create(:sample_attribute, title: 'bool', 
                                                                    sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, sample_type: type)
+
     type.save!
     assert_difference('Sample.count') do
       post :create, params: { sample: { sample_type_id: type.id,
@@ -194,9 +196,11 @@ class SamplesControllerTest < ActionController::TestCase
   test 'create and update with boolean' do
     person = FactoryBot.create(:person)
     login_as(person)
+
     type = FactoryBot.create(:simple_sample_type, policy: FactoryBot.create(:public_policy))
     type.sample_attributes << FactoryBot.create(:sample_attribute, title: 'bool', 
                                                                    sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, sample_type: type)
+
     type.save!
     assert_difference('Sample.count') do
       post :create, params: { sample: { sample_type_id: type.id, data: { the_title: 'ttt', bool: '1' },
@@ -242,8 +246,8 @@ class SamplesControllerTest < ActionController::TestCase
     person = FactoryBot.create(:person)
     login_as(person)
     type = FactoryBot.create(:simple_sample_type)
-    type.sample_attributes << FactoryBot.create(:sample_attribute, title: 'bool', 
-                                                                   sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, sample_type: type)
+    FactoryBot.create(:sample_attribute, title: 'bool',
+                      sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, sample_type: type)
     type.save!
     sample = FactoryBot.create(:sample, sample_type: type, contributor: person)
     sample.set_attribute_value(:the_title, 'ttt')
@@ -649,8 +653,8 @@ class SamplesControllerTest < ActionController::TestCase
     person = FactoryBot.create(:person)
     login_as(person)
     type = FactoryBot.create(:simple_sample_type)
-    type.sample_attributes << FactoryBot.create(:sample_attribute, title: 'bool', 
-                                                                   sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, sample_type: type)
+    FactoryBot.create(:sample_attribute, title: 'bool',
+                      sample_attribute_type: FactoryBot.create(:boolean_sample_attribute_type), required: false, sample_type: type)
     type.save!
     sample = FactoryBot.create(:sample, sample_type: type, contributor: person)
     sample.set_attribute_value(:the_title, 'ttt')

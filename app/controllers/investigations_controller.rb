@@ -20,7 +20,7 @@ class InvestigationsController < ApplicationController
 
   include Seek::AnnotationCommon
 
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
 
   api_actions :index, :show, :create, :update, :destroy
 
@@ -61,12 +61,12 @@ class InvestigationsController < ApplicationController
   end
 
   def export_isatab_json
-    the_hash = IsaTabConverter.convert_investigation(Investigation.find(params[:id]))
+    the_hash = ISATabConverter.convert_investigation(Investigation.find(params[:id]))
     send_data JSON.pretty_generate(the_hash) , filename: 'isatab.json'
   end
 
   def export_isa
-    isa = IsaExporter::Exporter.new(Investigation.find(params[:id]), current_user).export
+    isa = ISAExporter::Exporter.new(Investigation.find(params[:id]), current_user).export
     send_data isa, filename: 'isa.json', type: 'application/json', deposition: 'attachment'
   rescue Exception => e
     respond_to do |format|
@@ -108,7 +108,7 @@ class InvestigationsController < ApplicationController
       respond_to do |format|
         flash[:notice] = "The #{t('investigation')} was successfully created."
         format.html { redirect_to params[:single_page] ?
-          single_page_path(id: params[:single_page], item_type: 'investigation', item_id: @investigation) 
+          single_page_path(id: params[:single_page], item_type: 'investigation', item_id: @investigation)
           : investigation_path(@investigation) }
         format.json { render json: @investigation }
       end
@@ -175,7 +175,9 @@ class InvestigationsController < ApplicationController
     transforming_api_data = data_investigation.transforming_api(@investigation, InvestigationSerializer, 'investigation')
 
     begin
+
       endpoints = Nfdi4Health::Client.new()
+
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

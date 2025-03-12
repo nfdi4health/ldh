@@ -67,7 +67,7 @@ class InvestigationTest < ActiveSupport::TestCase
       assay.save!
     end
 
-    the_hash = IsaTabConverter.convert_investigation(object)
+    the_hash = ISATabConverter.convert_investigation(object)
     json = JSON.pretty_generate(the_hash)
 
     # write out to a temporary file
@@ -157,7 +157,7 @@ class InvestigationTest < ActiveSupport::TestCase
     end
 
     assert_equal 1, investigation.snapshots.count
-    assert_equal investigation.title, snapshot.title
+    assert_equal investigation.title, snapshot.metadata['title']
   end
 
   test 'clone with associations' do

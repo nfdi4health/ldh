@@ -1,4 +1,3 @@
-require 'seek/custom_exception'
 require 'zip'
 require 'securerandom'
 require 'json'
@@ -51,7 +50,7 @@ class ProjectsController < ApplicationController
 
   cache_sweeper :projects_sweeper, only: %i[update create destroy]
 
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
 
   respond_to :html, :json
 
@@ -577,7 +576,9 @@ class ProjectsController < ApplicationController
     data_project = Nfdi4Health::Preparation_json.new
     transforming_api_data = data_project.transforming_api(@project, ProjectSerializer, 'projects')
     begin
+
       endpoints = Nfdi4Health::Client.new()
+
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

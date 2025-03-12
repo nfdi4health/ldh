@@ -1,5 +1,6 @@
 name: Build Docker Image
 
+
 on:
   pull_request:
     branches:
@@ -7,8 +8,8 @@ on:
   push:
     branches:
       - main
-      - workflow
       - workflowhub
+      - rails-7-hacking-rebased
       - full-test-suite
       - seek-1.16
 
@@ -19,6 +20,7 @@ jobs:
     name: "Build Image"
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
       - name: Generate Image Tags

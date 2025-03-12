@@ -4,6 +4,7 @@ require 'uri'
 module Nfdi4Health
 
   class Client
+
     attr_accessor :transformed
     def initialize()
       @password = Seek::Config.n4h_password
