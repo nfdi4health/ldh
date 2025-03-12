@@ -2,7 +2,7 @@ FROM ruby:3.1-slim-bullseye
 
 LABEL maintainer="Stuart Owen <orcid.org/0000-0003-2130-0865>, Finn Bacall"
 ARG SOURCE_COMMIT
-ENV APP_DIR /seek
+ENV APP_DIR=/seek
 ENV RAILS_ENV=production
 
 # need to set the locale, otherwise some gems file to install
@@ -12,7 +12,7 @@ RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends build-essential cmake curl default-mysql-client gettext graphviz git \
 		libcurl4-gnutls-dev libmagick++-dev libmariadb-dev libpq-dev libreadline-dev \
 		libreoffice libsqlite3-dev libssl-dev libxml++2.6-dev \
-		libxslt1-dev locales nginx nodejs openjdk-11-jdk-headless \
+		libxslt1-dev libyaml-dev locales nginx nodejs openjdk-11-jdk-headless \
 		python3.9-dev python3.9-distutils python3-pip \
 		poppler-utils postgresql-client shared-mime-info sqlite3 links telnet vim-tiny zip && \
     apt-get clean && \
