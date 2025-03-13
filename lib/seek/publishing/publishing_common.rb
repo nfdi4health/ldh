@@ -42,11 +42,10 @@ module Seek
         end
       end
 
-      def update_sharing_policies(*args)
-        param_access_type = params['policy_attributes'] ? params['policy_attributes']['access_type'] : nil
-        current_access_type = args.first.policy.access_type.to_s
-        @policy_updated = true if param_access_type != current_access_type
-        super
+      def update_sharing_policies(item, parameters = params)
+        value = super
+        @policy_updated = true if item.policy&.access_type_changed?
+        value
       end
 
       def publish
@@ -140,7 +139,7 @@ module Seek
         end
         @assets_not_in_isa = []
         @assets.each do |type, klass|
-          next if %w[Investigation Study Assay].include? type
+          next if %w[Investigation Study Assay ObservationUnit].include? type
           klass.each do |asset|
             if !asset.respond_to?(:investigations) || asset.investigations.empty?
               @assets_not_in_isa.push(asset)

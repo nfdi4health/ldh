@@ -45,10 +45,12 @@ class ModelTest < ActiveSupport::TestCase
       FactoryBot.create :relationship, subject: object, predicate: Relationship::RELATED_TO_PUBLICATION, other_object: pub
       object.reload
       rdf = object.to_rdf
-      RDF::Reader.for(:rdfxml).new(rdf) do |reader|
-        assert reader.statements.count > 1
-        assert_equal RDF::URI.new("http://localhost:3000/models/#{object.id}"), reader.statements.first.subject
+      graph = RDF::Graph.new do |graph|
+        RDF::Reader.for(:ttl).new(rdf) {|reader| graph << reader}
       end
+      assert graph.statements.count > 1
+      assert_equal RDF::URI.new("http://localhost:3000/models/#{object.id}"), graph.statements.first.subject
+
     end
   end
 
@@ -95,6 +97,16 @@ class ModelTest < ActiveSupport::TestCase
     assert !model.contains_sbml?
     assert !model.is_jws_supported?
     assert !model.contains_jws_dat?
+
+
+    model = FactoryBot.create(:copasi_model)
+    assert model.is_copasi_supported?
+
+    model = FactoryBot.create(:teusink_model)
+    assert model.is_copasi_supported?
+
+    model = FactoryBot.create(:non_sbml_xml_model)
+    assert !model.is_copasi_supported?
 
     # should also be able to handle new versions
     model = FactoryBot.create(:non_sbml_xml_model)
