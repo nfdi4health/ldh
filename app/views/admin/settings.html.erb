@@ -9,7 +9,7 @@
                            'Pubmed API email', 'When adding a publication from PubMed, an email address is required to use the API. No registration is required.') %>
 
     <%= admin_text_setting(:crossref_api_email, Seek::Config.crossref_api_email,
-                           'CrossRef API email', "When adding a publication from a DOI, an email address is required to use the API. The email address needs registering at #{link_to 'http://www.crossref.org/', 'http://www.crossref.org/',:target=>:_blank}") %>
+                           'CrossRef API email', "When adding a publication from a DOI, an email address is required to use the API. No registration is required.") %>
 
     <%= admin_checkbox_setting(:allow_publications_fulltext, 1, Seek::Config.allow_publications_fulltext,
                              "Allow uploading FullTexts", "Allow the registered users to upload Fulltext (pdf) for publications. They can also be made public. Please makes sure it is allowed first.") %>
@@ -38,6 +38,10 @@
                              :onkeypress => "javascript: return onlyNumbers(event);") %>
     </div>
 
+    <%= admin_text_setting(:sandbox_instance_url, Seek::Config.sandbox_instance_url,
+                           'Sandbox instance URL', "A URL of an instance of SEEK to be used for testing/development. Users will be directed here if they attempt to create a #{t('project')} or #{t('programme')} with a name including \"test\".") %>
+    <%= admin_text_setting(:sandbox_instance_name, Seek::Config.sandbox_instance_name,
+                           'Sandbox instance name', "The name of the testing/sandbox instance.") %>
     <h2>Policy and license settings</h2>
     <%= access_type_options = [Policy::PRIVATE, Policy::VISIBLE, Policy::ACCESSIBLE]
         # Passing in a data file so that is_downloadable is true, and the ACCESSIBLE option will be kept.

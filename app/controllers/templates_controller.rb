@@ -107,7 +107,7 @@ class TemplatesController < ApplicationController
 
     begin
       running!
-      PopulateTemplatesJob.new.queue_job
+      PopulateTemplatesJob.perform_later(@current_user)
     rescue StandardError
       done!
     end
@@ -116,7 +116,7 @@ class TemplatesController < ApplicationController
   # post
   def template_attributes
     template = Template.find(params[:id])
-    items = template.template_attributes.map { |a| { id: a.id, title: a.title } }
+    items = template.template_attributes.map { |a| { id: a.id, title: a.title.sanitize } }
     respond_to do |format|
       format.json { render json: items.to_json }
     end

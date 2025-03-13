@@ -118,6 +118,7 @@ gem 'rails-observers'
 gem 'responders'
 
 gem 'rack-attack', '~> 6.6.0'
+gem 'rack', '>= 2.2.13'
 
 gem 'private_address_check'
 
@@ -136,7 +137,7 @@ gem 'request_store'
 
 gem 'bundler', '>= 1.8.4'
 
-gem 'ro-crate', '~> 0.5.2'
+gem 'ro-crate', '~> 0.5.3'
 
 gem 'rugged'
 gem 'i18n-js'
