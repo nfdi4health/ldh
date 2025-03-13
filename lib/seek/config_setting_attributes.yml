@@ -205,6 +205,7 @@ data_files_enabled:
 documents_enabled:
 events_enabled:
 isa_enabled:
+observation_units_enabled:
 models_enabled:
 organisms_enabled:
 programmes_enabled:
@@ -275,3 +276,7 @@ n4h_password:
 n4h_url:
 n4h_authorization_url:
 n4h_publish_url:
+fair_data_station_enabled:
+sandbox_instance_url:
+sandbox_instance_name:
+scraper_config:
