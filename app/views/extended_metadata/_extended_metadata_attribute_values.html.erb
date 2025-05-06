@@ -38,7 +38,7 @@
         var projectNumber = $j(".extended_metadata").contents().filter(function() {
           return this.nodeType === 3; // Text-Knoten filtern
       }).text().trim();
-        console.log(projectNumber);
+
         if (projectNumber) {
             var url = `https://health-study-hub.de/resource/`+ projectNumber;
 
