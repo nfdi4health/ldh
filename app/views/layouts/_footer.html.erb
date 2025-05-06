@@ -14,6 +14,7 @@
             <%= image(:seek_logo, width: 64, height: 64) %>
           </a>
           <span class="subtle"><%= version_text -%></span>
+          <p class="subtle">(LDH: <%= ldh_version_text -%>)</p>
         </div>
         <% cache cache_name, skip_digest: true do -%>
           <div class="ft-info">
