@@ -11,7 +11,7 @@
 
 <div id="<%= prefix-%>-role-<%= index-%>" class="<%= key.singularize %> single-role multi_linked_extended_metdata" data-index="<%= index-%>">
   <% attribute.linked_extended_metadata_type.extended_metadata_attributes.each do |attr| %>
-    <div class="form-group"><label><%= attr.label %></label><%= required_span if attr.required? %>
+    <div id="<%= "#{attr.title}_#{index}".parameterize %>" class="form-group"><label><%= attr.label %></label><%= required_span if attr.required? %>
       <div class="form-group single-attr-row">
         <% attr_element_name = "#{element_name}[#{index}][#{attr.title}]" %>
         <%= attribute_form_element(attr, value ? value[attr.title] : nil, attr_element_name, element_class) %>
