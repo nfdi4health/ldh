@@ -682,4 +682,14 @@ class AdminControllerTest < ActionController::TestCase
 
     assert flash[:error].blank?
   end
+  test 'get registered users' do
+    user = FactoryBot.create(:user, email: 'masoud@test.com')
+    person_with_user = user.person
+    person_without_user = FactoryBot.create(:person, user: nil)
+    get :get_stats, xhr: true, params: { page: 'registered_users' }
+    assert_response :success
+    assert_match person_with_user.name, response.body
+    refute_match person_without_user.name, response.body
+    #refute_match /Delete/, response.body
+  end
 end
