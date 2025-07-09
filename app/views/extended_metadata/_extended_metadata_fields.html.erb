@@ -1,14 +1,26 @@
 <% if extended_metadata_type.enabled? && extended_metadata_type.title == "Nfdi4Health MDS 3.3" %>
-  <div id="exm_fetch" class="form-group">
+  <div id="exm_fetch" class="form-group markdown-body seek-description">
+
+    <h4>Prefill Nfdi4Health Metadata Schema </h4>
+
+
     <%= form_with url: metadata_fetch_path, method: :post, class: "form-inline",  remote: true do |f| %>
       <div class="form-group">
         <%= f.label :search, "Resource-ID" %>
         <%= f.text_field :search, class: "form-control", placeholder: "Resource-ID" %>
       </div>
       <div class="form-group">
+        <%= f.label :options, "Source" %>
+        <%= f.select :options, ['GCHSH','clinical.gov'], {}, class: "form-control" %>
+      </div>
+      <div class="form-group">
         <%= f.submit "Fetch", class: "btn btn-primary" %>
       </div>
     <% end %>
+    <p class="help-block">
+      Enter a resource ID (e.g. <code>nfdi4health-xxxxx, DRKS000xxxxxx, NCT000xxxxx</code>) to fetch extended metadata from choosen source.
+    </p>
+
   </div>
 <% end %>
 
