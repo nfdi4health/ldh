@@ -884,4 +884,6 @@ SEEK::Application.routes.draw do
 
   # for the api docs under production, avoids special rewrite rules
   get 'api', to: static("api/index.html") if Rails.env.production?
+
+  post "metadata_fetch", to: "metadata_fetch#fetch", as: :metadata_fetch
 end
