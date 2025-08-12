@@ -4,29 +4,27 @@
     <h4>Prefill Nfdi4Health Metadata Schema </h4>
 
 
-    <%= form_with url: metadata_fetch_path, method: :post, class: "form-inline",  remote: true do |f| %>
-      <div class="form-group">
-        <%= f.label :search, "Resource-ID" %>
-        <%= f.text_field :search, class: "form-control", placeholder: "Resource-ID" %>
-      </div>
-      <div class="form-group">
-        <%= f.label :options, "Source" %>
-        <%= f.select :options, ['GCHSH','clinical.gov'], {}, class: "form-control" %>
-      </div>
-      <div class="form-group">
-        <%= f.submit "Fetch", class: "btn btn-primary" %>
-      </div>
-    <% end %>
-    <p class="help-block">
-      Enter a resource ID (e.g. <code>nfdi4health-xxxxx, DRKS000xxxxxx, NCT000xxxxx</code>) to fetch extended metadata from choosen source.
-    </p>
 
-  </div>
+    <div>
+      <input type="text" id="search-input">
+      <select id="options-input">
+        <option>GCHSH</option>
+        <option>clinical.gov</option>
+      </select>
+      <button type="button" id="fetch-metadata">Fetch</button>
+    </div>
+
+      <p class="help-block">
+        Enter a resource ID (e.g. <code>nfdi4health-xxxxx, DRKS000xxxxxx, NCT000xxxxx</code>) to fetch extended metadata from choosen source.
+      </p>
+
+    </div>
+
 <% end %>
 
 
 <% extended_metadata_type.extended_metadata_attributes.each do |attribute| %>
-  <div id="<%= "wrapper-#{attribute.title.parameterize}" %>"" class="form-group">
+  <div id="<%= "wrapper-#{attribute.title.parameterize}" %>" class="form-group">
     <%= extended_metadata_form_field_for_attribute(attribute,resource, parent_resource) %>
     <% unless attribute.description.nil? %>
       <%= extended_metadata_attribute_description(attribute.description) %>
@@ -156,6 +154,18 @@
     }
 
     $j(document).ready(function () {
+        $j('#fetch-metadata').on('click', function(e) {
+            e.preventDefault();
+            jQuery.ajax({
+                url: '/metadata_fetch',
+                method: 'POST',
+                data: {
+                    search: $j('#search-input').val(),
+                    options: $j('#options-input').val()
+                },
+                dataType: 'script'
+            });
+        });
       $j('#wrapper-resource_identifier_project').hide();
       $j('#resource_contributors_organisational_project_0').hide();
       $j('#resource_contributors_personal_project_0').hide();

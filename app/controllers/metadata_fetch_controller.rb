@@ -14,9 +14,9 @@ class MetadataFetchController < ApplicationController
       flash[:alert] = "No data found from #{resource_id}"
     end
     respond_to do |format|
-      #format.js   # renders fetch.js.erb
+      format.js   # renders fetch.js.erb
 
-      format.html { render :fetch } # fallback
+      #format.html { render :fetch } # fallback
     end
 
 
@@ -50,7 +50,14 @@ class MetadataFetchController < ApplicationController
 
   def get_json_from_url(url)
     uri = URI.parse(url)
-    response = Net::HTTP.get_response(uri)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = (uri.scheme == "https")
+
+    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.ca_file = '/etc/ssl/certs/ca-certificates.crt'
+
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
 
     if response.is_a?(Net::HTTPSuccess)
       JSON.parse(response.body)
