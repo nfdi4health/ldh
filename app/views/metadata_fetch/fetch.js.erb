@@ -1,5 +1,23 @@
 var metadata = <%= @metadata.to_json.html_safe %>;
 
+const box = document.getElementById("metadata-fetch-message");
+
+// Reset
+box.classList.remove("alert-danger", "alert-success");
+
+<% if @fetch_status == :error %>
+  box.classList.add("alert-danger");
+  box.innerText = "<%= j @fetch_message %>";
+  box.style.display = "block";
+<% elsif @fetch_status == :success %>
+  box.classList.add("alert-success");
+  box.innerText = "<%= j @fetch_message %>";
+  box.style.display = "block";
+<% else %>
+  box.style.display = "none";
+<% end %>
+
+
 function setFieldValue(id, value) {
     const el = $j(id);
     if (!el.length) return;
@@ -531,12 +549,3 @@ setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_
 
 setFieldValue('#project_extended_metadata_attributes_data_Resource_nutritionalData_Project', metadata.resource?.nutritionalData);
 setFieldValue('#project_extended_metadata_attributes_data_Resource_chronicDiseases_Project', metadata.resource?.chronicDiseases);
-
-
-
-
-
-
-
-
-

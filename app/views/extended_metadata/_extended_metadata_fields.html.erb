@@ -1,16 +1,17 @@
 <% if extended_metadata_type.enabled? && extended_metadata_type.title == "Nfdi4Health MDS 3.3" %>
   <div id="exm_fetch" class="form-group markdown-body seek-description">
 
+  <!-- ERROR PLACEHOLDER -->
+    <div id="metadata-fetch-message" class="alert" style="display:none;"></div>
+
     <h4>Prefill Nfdi4Health Metadata Schema </h4>
-
-
 
     <div>
       <input type="text" id="search-input">
-      <select id="options-input">
-        <option>GCHSH</option>
-        <option>clinical.gov</option>
-      </select>
+      <!-- select id="options-input">
+        < option>GCHSH</option>
+        < option>clinical.gov</option>
+      </select -->
       <button type="button" id="fetch-metadata">Fetch</button>
     </div>
 
