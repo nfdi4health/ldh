@@ -1136,7 +1136,9 @@ DEPENDENCIES
   rails-perftest
   rails_autolink
   rails_best_practices
+  rdf
   rdf-virtuoso
+  rdf-vocab (~> 3.2.1)
   rdoc
   recaptcha
   remotipart

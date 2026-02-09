@@ -545,6 +545,17 @@ module ApplicationHelper
       end
     end
   end
+
+
+  def ldh_version_text
+    @ldh_version ||= begin
+      config = YAML.load_file(Rails.root.join('config', 'ldh_version.yml'))
+      config['version']
+    rescue => e
+      Rails.logger.warn "Fehler beim Lesen der LDH-Version: #{e.message}"
+      'unbekannt'
+    end
+  end
 end
 
 class ApplicationFormBuilder < ActionView::Helpers::FormBuilder

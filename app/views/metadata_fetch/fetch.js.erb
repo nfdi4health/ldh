@@ -1,0 +1,552 @@
+var metadata = <%= @metadata.to_json.html_safe %>;
+
+const box = document.getElementById("metadata-fetch-message");
+
+// Reset
+box.classList.remove("alert-danger", "alert-success");
+
+<% if @fetch_status == :error %>
+  box.classList.add("alert-danger");
+  box.innerText = "<%= j @fetch_message %>";
+  box.style.display = "block";
+<% elsif @fetch_status == :success %>
+  box.classList.add("alert-success");
+  box.innerText = "<%= j @fetch_message %>";
+  box.style.display = "block";
+<% else %>
+  box.style.display = "none";
+<% end %>
+
+
+function setFieldValue(id, value) {
+    const el = $j(id);
+    if (!el.length) return;
+    if (el.is('select[multiple]')) {
+        if (!value) return;
+        if (!Array.isArray(value)) value = [value];
+        el.val(value).trigger('change');
+    } else {
+        el.val(value || '').trigger('change');
+    }
+}
+function setFieldValue_lang(id, value) {
+    const el = $j(id);
+    if (!el.length) return;
+
+    if (el.is('select[multiple]')) {
+        if (!value) return;
+        if (!Array.isArray(value)) value = [value];
+
+        const matchedValues = value.map(val => {
+            if (val.includes('German')) return 'German';
+            if (val.includes('French')) return 'French';
+            if (val.includes('English')) return 'English';
+            return null;
+        }).filter(Boolean);
+
+        el.val(null).trigger('change');
+        if (matchedValues.length) {
+            el.val(matchedValues).trigger('change');
+        }
+    } else {
+        el.val(value || '').trigger('change');
+    }
+}
+
+function collectValuesByPath(metadata, path, key, filterKey, filterValue) {
+    var results = [];
+    if (!metadata || !path) return results;
+    var parts = path.split('.');
+    var currentLevel = [metadata];
+    parts.forEach(function(part) {
+        var nextLevel = [];
+        currentLevel.forEach(function(item) {
+            if (item && item[part]) {
+                if (Array.isArray(item[part])) {
+                    nextLevel = nextLevel.concat(item[part]);
+                } else {
+                    nextLevel.push(item[part]);
+                }
+            }
+        });
+        currentLevel = nextLevel;
+    });
+    if (filterKey && filterValue) {
+        currentLevel = currentLevel.filter(function(item) {
+            return item && item[filterKey] === filterValue;
+        });
+    }
+    currentLevel.forEach(function(item) {
+        if (item && item[key] !== undefined) {
+            results.push(item[key]);
+        }
+    });
+    return results;
+}
+setFieldValue('#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project', metadata.resource.classification?.type);
+function populateTitles(titles) {
+    if (!Array.isArray(titles)) return;
+    titles.forEach(function(title, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-resource_titles_project').click();
+        }
+
+        const textId = `#project_extended_metadata_attributes_data_Resource_titles_Project_${index}_Resource_titles_text_Project`;
+        const langId = `#project_extended_metadata_attributes_data_Resource_titles_Project_${index}_Resource_titles_language_Project`;
+
+        setFieldValue(textId, title.text);
+        setFieldValue_lang(langId, title.language);
+    });
+}
+
+function populateAcronyms(acronyms) {
+    if (!Array.isArray(acronyms)) return;
+    acronyms.forEach(function(acronym, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-resource_acronyms_project').click();
+        }
+
+        const textId = `#project_extended_metadata_attributes_data_Resource_acronyms_Project_${index}_Resource_acronyms_text_Project`;
+        const langId = `#project_extended_metadata_attributes_data_Resource_acronyms_Project_${index}_Resource_acronyms_language_Project`;
+
+        setFieldValue(textId, acronym.text);
+        setFieldValue_lang(langId, acronym.language);
+    });
+}
+function populateDescriptions(descriptions) {
+    if (!Array.isArray(descriptions)) return;
+    descriptions.forEach(function(description, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-resource_descriptions_project').click();
+        }
+
+        const textId = `#project_extended_metadata_attributes_data_Resource_descriptions_Project_${index}_Resource_descriptions_text_Project`;
+        const langId = `#project_extended_metadata_attributes_data_Resource_descriptions_Project_${index}_Resource_descriptions_language_Project`;
+
+        setFieldValue(textId, description.text);
+        setFieldValue_lang(langId, description.language);
+    });
+}
+//project_extended_metadata_attributes_data_Resource_keywords_Project_0_Resource_keywords_label_Project
+function populateKeywords(keywords) {
+    if (!Array.isArray(keywords)) return;
+    keywords.forEach(function(keyword, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-resource_keywords_project').click();
+        }
+
+        const textId = `#project_extended_metadata_attributes_data_Resource_keywords_Project_${index}_Resource_keywords_label_Project`;
+
+        setTimeout(() => {
+            setFieldValue(textId, keyword.label);
+        }, 50);
+    });
+}
+setFieldValue('#project_extended_metadata_attributes_data_Resource_identifier_Project', metadata.resource.identifier);
+//setFieldValue('#project_extended_metadata_attributes_data_Resource_titles_Project_0_Resource_titles_text_Project', collectValuesByPath(metadata, 'resource.titles', 'text')[0]);
+//setFieldValue_lang('#project_extended_metadata_attributes_data_Resource_titles_Project_0_Resource_titles_language_Project', collectValuesByPath(metadata, 'resource.titles', 'language')[0]);
+populateTitles(metadata.resource.titles);
+//setFieldValue('#project_extended_metadata_attributes_data_Resource_acronyms_Project_0_Resource_acronyms_text_Project', collectValuesByPath(metadata, 'resource.acronyms', 'text')[0]);
+//setFieldValue_lang('#project_extended_metadata_attributes_data_Resource_acronyms_Project_0_Resource_acronyms_language_Project', collectValuesByPath(metadata, 'resource.acronyms', 'language')[0]);
+populateAcronyms(metadata.resource.acronyms);
+//setFieldValue('#project_extended_metadata_attributes_data_Resource_descriptions_Project_0_Resource_descriptions_text_Project', collectValuesByPath(metadata, 'resource.descriptions', 'text')[0]);
+//setFieldValue_lang('#project_extended_metadata_attributes_data_Resource_descriptions_Project_0_Resource_descriptions_language_Project', collectValuesByPath(metadata, 'resource.descriptions', 'language')[0]);
+populateDescriptions(metadata.resource.descriptions);
+
+populateKeywords(metadata.resource.keywords);
+console.log(metadata.resource.languages);
+setFieldValue_lang('#project_extended_metadata_attributes_data_Resource_languages_Project', metadata.resource.languages);//I didnt test it yet
+setFieldValue('#project_extended_metadata_attributes_data_Resource_webpage_Project', metadata.resource.webpage);
+
+//    setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_nameType_Project', collectValuesByPath(metadata, 'resource.contributors', 'nameType')[0]);
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_personal_Project_Resource_contributors_personal_type_Project', collectValuesByPath(metadata, 'resource.contributors.personal', 'type')[0]);
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_personal_Project_Resource_contributors_personal_givenName_Project', collectValuesByPath(metadata, 'resource.contributors', 'personal.givenName', 'nameType', 'Personal')[0]);
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_personal_Project_Resource_contributors_personal_familyName_Project', collectValuesByPath(metadata, 'resource.contributors', 'personal.familyName', 'nameType', 'Personal')[0]);
+//            setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_personal_Project_Resource_contributors_personal_identifiers_Project_0_Resource_contributors_personal_identifiers_identifier_Project', collectValuesByPath(metadata, 'resource.contributors.personal.identifiers', 'identifier')[0]);
+//            setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_personal_Project_Resource_contributors_personal_identifiers_Project_0_Resource_contributors_personal_identifiers_scheme_Project', collectValuesByPath(metadata, 'resource.contributors.personal.identifiers', 'scheme')[0]);
+            //add-row-project-extended_metadata_attributes-data-resource_contributors_project-0-resource_contributors_personal_project-resource_contributors_personal_identifiers_project
+
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_organisational_Project_Resource_contributors_organisational_type_Project', collectValuesByPath(metadata, 'resource.contributors.organisational', 'type')[0]);
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_organisational_Project_Resource_contributors_organisational_fundingIds_Project', collectValuesByPath(metadata, 'resource.contributors.organisational', 'fundingIds')[0]);
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_organisational_Project_Resource_contributors_organisational_name_Project', collectValuesByPath(metadata, 'resource.contributors', 'organisational.name', 'nameType', 'Organisational')[0]);
+//    setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_email_Project', collectValuesByPath(metadata, 'resource.contributors', 'email')[0]);
+//    setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_phone_Project', collectValuesByPath(metadata, 'resource.contributors', 'phone')[0]);
+
+//    setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_affiliations_Project_0_Resource_contributors_affiliations_name_Project', collectValuesByPath(metadata, 'resource.contributors.affiliations', 'name')[0]);
+//    setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_affiliations_Project_0_Resource_contributors_affiliations_address_Project', collectValuesByPath(metadata, 'resource.contributors.affiliations', 'address')[0]);
+//    setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_affiliations_Project_0_Resource_contributors_affiliations_webpage_Project', collectValuesByPath(metadata, 'resource.contributors.affiliations', 'webpage')[0]);
+
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_affiliations_Project_0_Resource_contributors_affiliations_identifiers_Project_0_Resource_contributors_affiliations_identifiers_identifier_Project', collectValuesByPath(metadata, 'resource.contributors.affiliations.identifiers', 'identifier')[0]);
+//        setFieldValue('#project_extended_metadata_attributes_data_Resource_contributors_Project_0_Resource_contributors_affiliations_Project_0_Resource_contributors_affiliations_identifiers_Project_0_Resource_contributors_affiliations_identifiers_scheme_Project', collectValuesByPath(metadata, 'resource.contributors.affiliations.identifiers', 'scheme')[0]);
+        //add-row-project-extended_metadata_attributes-data-resource_contributors_project-0-resource_contributors_affiliations_project-0-resource_contributors_affiliations_identifiers_project
+
+    //add-row-project-extended_metadata_attributes-data-resource_contributors_project-0-resource_contributors_affiliations_project
+
+//add-row-project-extended_metadata_attributes-data-resource_contributors_project
+
+if (Array.isArray(metadata.resource.contributors)) {
+    metadata.resource.contributors.forEach(function(contributor, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-resource_contributors_project').click();
+        }
+
+        const base = `#project_extended_metadata_attributes_data_Resource_contributors_Project_${index}_Resource_contributors`;
+
+        // nameType
+        setFieldValue(`${base}_nameType_Project`, contributor.nameType);
+
+        // --- Personal ---
+        if (contributor.nameType === 'Personal' && contributor.personal) {
+            setFieldValue(`${base}_personal_Project_Resource_contributors_personal_type_Project`, contributor.personal.type);
+            setFieldValue(`${base}_personal_Project_Resource_contributors_personal_givenName_Project`, contributor.personal.givenName);
+            setFieldValue(`${base}_personal_Project_Resource_contributors_personal_familyName_Project`, contributor.personal.familyName);
+
+            if (Array.isArray(contributor.personal.identifiers) && contributor.personal.identifiers.length > 0) {
+                contributor.personal.identifiers.forEach(function(identifier, idx) {
+                    if (idx > 0) {
+                        $j(`#add-row-project-extended_metadata_attributes-data-resource_contributors_project-${index}-resource_contributors_personal_project-resource_contributors_personal_identifiers_project`).click();
+                    }
+
+                    const idBase = `${base}_personal_Project_Resource_contributors_personal_identifiers_Project_${idx}_Resource_contributors_personal_identifiers`;
+                    setFieldValue(`${idBase}_identifier_Project`, identifier.identifier);
+                    setFieldValue(`${idBase}_scheme_Project`, identifier.scheme);
+                });
+            } else {
+                $j(`#project\\[extended_metadata_attributes\\]\\[data\\]\\[Resource_contributors_Project\\]\\[${index}\\]\\[Resource_contributors_personal_Project\\]\\[Resource_contributors_personal_identifiers_Project\\]\\[0\\]-checkbox\\[_destroy\\]`).click();
+            }
+        }
+
+        // --- Organisational ---
+        if (contributor.nameType === 'Organisational' && contributor.organisational) {
+            setFieldValue(`${base}_organisational_Project_Resource_contributors_organisational_type_Project`, contributor.organisational.type);
+            setFieldValue(`${base}_organisational_Project_Resource_contributors_organisational_fundingIds_Project`, contributor.organisational.fundingIds);
+            setFieldValue(`${base}_organisational_Project_Resource_contributors_organisational_name_Project`, contributor.organisational.name);
+        }
+
+        // --- Common fields ---
+        setFieldValue(`${base}_email_Project`, contributor.email);
+        setFieldValue(`${base}_phone_Project`, contributor.phone);
+
+        // --- Affiliations ---
+        if (Array.isArray(contributor.affiliations) && contributor.affiliations.length > 0) {
+            contributor.affiliations.forEach(function(affiliation, affIndex) {
+                if (affIndex > 0) {
+                    $j(`#add-row-project-extended_metadata_attributes-data-resource_contributors_project-${index}-resource_contributors_affiliations_project`).click();
+                }
+
+                const affBase = `${base}_affiliations_Project_${affIndex}_Resource_contributors_affiliations`;
+
+                setFieldValue(`${affBase}_name_Project`, affiliation.name);
+                setFieldValue(`${affBase}_address_Project`, affiliation.address);
+                setFieldValue(`${affBase}_webpage_Project`, affiliation.webpage);
+
+                if (Array.isArray(affiliation.identifiers) && affiliation.identifiers.length > 0) {
+                    affiliation.identifiers.forEach(function(identifier, idIndex) {
+                        if (idIndex > 0) {
+                            $j(`#add-row-project-extended_metadata_attributes-data-resource_contributors_project-${index}-resource_contributors_affiliations_project-${affIndex}-resource_contributors_affiliations_identifiers_project`).click();
+                        }
+
+                        const idBase = `${affBase}_identifiers_Project_${idIndex}_Resource_contributors_affiliations_identifiers`;
+                        setFieldValue(`${idBase}_identifier_Project`, identifier.identifier);
+                        setFieldValue(`${idBase}_scheme_Project`, identifier.scheme);
+                    });
+                } else {
+                    $j(`#project\\[extended_metadata_attributes\\]\\[data\\]\\[Resource_contributors_Project\\]\\[${index}\\]\\[Resource_contributors_affiliations_Project\\]\\[${affIndex}\\]-checkbox\\[_destroy\\]`).click();
+                }
+            });
+        } else {
+            $j(`#project\\[extended_metadata_attributes\\]\\[data\\]\\[Resource_contributors_Project\\]\\[${index}\\]\\[Resource_contributors_affiliations_Project\\]\\[0\\]-checkbox\\[_destroy\\]`).click();
+        }
+
+        // --- Remove contributor if empty ---
+        if (!contributor.personal && !contributor.organisational && !contributor.affiliations) {
+            $j(`#project\\[extended_metadata_attributes\\]\\[data\\]\\[Resource_contributors_Project\\]\\[${index}\\]-checkbox\\[_destroy\\]`).click();
+        }
+    });
+}
+
+
+
+//setFieldValue('#project_extended_metadata_attributes_data_Resource_idsAlternative_Project_0_Resource_idsAlternative_scheme_Project', collectValuesByPath(metadata, 'resource.idsAlternative', 'scheme')[0]);
+//setFieldValue('#project_extended_metadata_attributes_data_Resource_idsAlternative_Project_0_Resource_idsAlternative_identifier_Project', collectValuesByPath(metadata, 'resource.idsAlternative', 'identifier')[0]);
+//add-row-project-extended_metadata_attributes-data-resource_idsalternative_project
+if (Array.isArray(metadata.resource.idsAlternative)) {
+    metadata.resource.idsAlternative.forEach(function(alt, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-resource_idsalternative_project').click();
+        }
+
+        const base = `#project_extended_metadata_attributes_data_Resource_idsAlternative_Project_${index}_Resource_idsAlternative`;
+
+        setFieldValue(`${base}_scheme_Project`, alt.scheme);
+        setFieldValue(`${base}_identifier_Project`, alt.identifier);
+    });
+}
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_primaryDesign_Project', metadata.resource.design?.primaryDesign);
+//project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_nonInterventional_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_nonInterventional_Project', metadata.resource.design.studyType?.nonInterventional);
+//project_extended_metadata_attributes_data_Design_Project_Design_conditions_Project_0_Design_conditions_label_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_conditions_Project_0_Design_conditions_classification_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_conditions_Project_0_Design_conditions_code_Project
+
+//add-row-project-extended_metadata_attributes-data-design_project-design_conditions_project
+function populateConditions(conditions) {
+    if (!Array.isArray(conditions)) {
+        $j(`#project\\[extended_metadata_attributes\\]\\[data\\]\\[Design_Project\\]\\[Design_conditions_Project\\]\\[0\\]-checkbox\\[_destroy\\]`).click();
+        return;}
+
+    conditions.forEach(function(condition, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-design_project-design_conditions_project').click();
+        }
+
+        const base = `#project_extended_metadata_attributes_data_Design_Project_Design_conditions_Project_${index}_Design_conditions`;
+
+        setFieldValue(`${base}_label_Project`, condition.label);
+        setFieldValue(`${base}_classification_Project`, condition.classification);
+        setFieldValue(`${base}_code_Project`, condition.code);
+    });
+}
+populateConditions(metadata.resource.design.conditions);
+//project_extended_metadata_attributes_data_Design_Project_Design_groupsOfDiseases_Project_Design_groupsOfDiseases_generally_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_groupsOfDiseases_Project_Design_groupsOfDiseases_conditions_Project
+function populateGroupsOfDiseases(data) {
+    if (!data) return;
+
+    const generallyId = '#project_extended_metadata_attributes_data_Design_Project_Design_groupsOfDiseases_Project_Design_groupsOfDiseases_generally_Project';
+    const conditionsId = '#project_extended_metadata_attributes_data_Design_Project_Design_groupsOfDiseases_Project_Design_groupsOfDiseases_conditions_Project';
+
+    if (Array.isArray(data.generally)) {
+        $j(generallyId).val(null).trigger('change'); // reset
+        $j(generallyId).val(data.generally).trigger('change');
+    }
+
+    if (Array.isArray(data.conditions)) {
+        $j(conditionsId).val(null).trigger('change'); // reset
+        $j(conditionsId).val(data.conditions).trigger('change');
+    }
+}
+populateGroupsOfDiseases(metadata.resource.design.groupsOfDiseases);
+//project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_ethicsCommitteeApproval_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_status_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_statusEnrollingByInvitation_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_startDate_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_endDate_Project
+function populateAdministrativeInformation(info) {
+    if (!info) return;
+
+    const ethicsId = '#project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_ethicsCommitteeApproval_Project';
+    const statusId = '#project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_status_Project';
+    const enrollingId = '#project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_statusEnrollingByInvitation_Project';
+
+    const startDateId = '#project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_startDate_Project';
+    const endDateId = '#project_extended_metadata_attributes_data_Design_Project_Design_administrativeInformation_Project_Design_administrativeInformation_endDate_Project';
+
+    if (info.ethicsCommitteeApproval)
+        $j(ethicsId).val(info.ethicsCommitteeApproval).trigger('change');
+
+    if (info.status)
+        $j(statusId).val(info.status).trigger('change');
+
+    if (info.recruitmentStatusRegister === 'Enrolling by invitation') {
+        $j(enrollingId).val(true).trigger('change');
+    } else {
+        $j(enrollingId).val(false).trigger('change');
+    }
+
+
+    if (info.startDate) {
+        const start = info.startDate.split('T')[0];
+        $j(startDateId).val(start).trigger('change');
+    }
+
+    if (info.endDate) {
+        const end = info.endDate.split('T')[0];
+        $j(endDateId).val(end).trigger('change');
+    }
+}
+populateAdministrativeInformation(metadata.resource.design.administrativeInformation);
+
+
+//project_extended_metadata_attributes_data_Design_Project_Design_centers_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_subject_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_centers_Project', metadata.resource.design?.centers);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_subject_Project', metadata.resource.design?.subject);
+if(metadata.resource.design.eligibilityCriteria.ageMin){
+    setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_ageMin_Project_Design_eligibilityCriteria_ageMin_timeUnit_Project', collectValuesByPath(metadata, 'resource.design.eligibilityCriteria.ageMin', 'timeUnit'));
+    $j('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_ageMin_Project_Design_eligibilityCriteria_ageMin_number_Project').val(metadata.resource.design.eligibilityCriteria.ageMin.number || '');
+}
+
+
+
+if(metadata.resource.design.eligibilityCriteria.ageMax){
+    setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_ageMax_Project_Design_eligibilityCriteria_ageMax_timeUnit_Project', collectValuesByPath(metadata, 'resource.design.eligibilityCriteria.ageMax', 'timeUnit'));
+    $j('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_ageMax_Project_Design_eligibilityCriteria_ageMax_number_Project').val(metadata.resource.design.eligibilityCriteria.ageMax.number || '');
+}
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_genders_Project', metadata.resource.design.eligibilityCriteria?.genders);
+//project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_inclusionCriteria_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_exclusionCriteria_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_inclusionCriteria_Project', metadata.resource.design?.eligibilityCriteria?.inclusionCriteria);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_eligibilityCriteria_Project_Design_eligibilityCriteria_exclusionCriteria_Project', metadata.resource.design?.eligibilityCriteria?.exclusionCriteria);
+
+
+//project_extended_metadata_attributes_data_Design_Project_Design_population_Project_Design_population_coverage_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_population_Project_Design_population_countries_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_population_Project_Design_population_region_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_population_Project_Design_population_coverage_Project', metadata.resource.design?.population?.coverage);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_population_Project_Design_population_countries_Project', metadata.resource.design?.population?.countries);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_population_Project_Design_population_region_Project', metadata.resource.design?.population?.region);
+console.log(metadata.resource.design.interventions);
+//project_extended_metadata_attributes_data_Design_Project_Design_interventions_Project_0_Design_interventions_type_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_interventions_Project_0_Design_interventions_name_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_interventions_Project_0_Design_interventions_description_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_interventions_Project_0_Design_interventions_armsLabel_Project
+if (Array.isArray(metadata?.resource?.design?.interventions) && metadata.resource.design.interventions.length > 0) {
+    metadata.resource.design.interventions.forEach(function(intervention, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-design_project-design_interventions_project').click();
+        }
+
+        const base = `#project_extended_metadata_attributes_data_Design_Project_Design_interventions_Project_${index}_Design_interventions`;
+
+        setFieldValue(`${base}_name_Project`, intervention.name);
+        setFieldValue(`${base}_description_Project`, intervention.description);
+        setFieldValue(`${base}_armsLabel_Project`, intervention.armsLabel);
+        setFieldValue(`${base}_type_Project`, intervention.type);
+    });
+} else {
+    $j('project\\[extended_metadata_attributes\\]\\[data\\]\\[Design_Project\\]\\[Design_interventions_Project\\]\\[0\\]-checkbox\\[_destroy\\]').click();
+}
+console.log(metadata.resource.design.exposures);//I should add the code here!(exposures)
+//project_extended_metadata_attributes_data_Design_Project_Design_exposures_Project_0_Design_exposures_name_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_exposures_Project_0_Design_exposures_description_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_exposures_Project_0_Design_exposures_groupsLabel_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_exposures_Project_0_Design_exposures_type_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_outcomes_Project_0_Design_outcomes_title_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_outcomes_Project_0_Design_outcomes_description_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_outcomes_Project_0_Design_outcomes_timeFrame_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_outcomes_Project_0_Design_outcomes_type_Project
+//add-row-project-extended_metadata_attributes-data-design_project-design_outcomes_project
+function populateOutcomes(outcomes) {
+    if (!Array.isArray(outcomes)) return;
+
+    outcomes.forEach(function(outcome, index) {
+        if (index > 0) {
+            $j('#add-row-project-extended_metadata_attributes-data-design_project-design_outcomes_project').click();
+        }
+
+        const base = `#project_extended_metadata_attributes_data_Design_Project_Design_outcomes_Project_${index}_Design_outcomes`;
+
+        setFieldValue(`${base}_title_Project`, outcome.title);
+        setFieldValue(`${base}_description_Project`, outcome.description);
+        setFieldValue(`${base}_timeFrame_Project`, outcome.timeFrame);
+        setFieldValue(`${base}_type_Project`, outcome.type);
+    });
+}
+populateOutcomes(metadata.resource.design?.outcomes);
+//project_extended_metadata_attributes_data_Design_Project_Design_comment_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_assessments_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_comment_Project', metadata.resource?.design?.comment);
+console.log(metadata.resource?.design?.assessments);//I should test the assessments!
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_assessments_Project', metadata.resource?.design?.assessments);
+console.log(metadata.resource?.design?.dataSharingPlan);//I should test the dataSharingPlan more for example(dataSharingPlan and recordLinkage)!
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_timeFrame_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_accessCriteria_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_description_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_requestData_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_url_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_datashield_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_generally_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_supportingInformation_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_recordLinkage_Project
+
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_timeFrame_Project', metadata?.resource?.design?.dataSharingPlan?.timeFrame);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_accessCriteria_Project', metadata?.resource?.design?.dataSharingPlan?.accessCriteria);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_description_Project', metadata?.resource?.design?.dataSharingPlan?.description);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_requestData_Project', metadata?.resource?.design?.dataSharingPlan?.requestData);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_url_Project', metadata?.resource?.design?.dataSharingPlan?.url);
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_datashield_Project', metadata?.resource?.design?.dataSharingPlan?.datashield);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_generally_Project', metadata?.resource?.design?.dataSharingPlan?.generally);
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataSharingPlan_Project_Design_dataSharingPlan_supportingInformation_Project', metadata?.resource?.design?.dataSharingPlan?.supportingInformation);
+
+// radio
+const recordLinkage = metadata?.resource?.design?.dataSharingPlan?.recordLinkage;
+if (recordLinkage === true || recordLinkage === 'true') {
+    $j('input[name="project[extended_metadata_attributes][data][Design_Project][Design_dataSharingPlan_Project][Design_dataSharingPlan_recordLinkage_Project]"][value="true"]').prop('checked', true);
+} else if (recordLinkage === false || recordLinkage === 'false') {
+    $j('input[name="project[extended_metadata_attributes][data][Design_Project][Design_dataSharingPlan_Project][Design_dataSharingPlan_recordLinkage_Project]"][value="false"]').prop('checked', true);
+} else {
+    $j('input[name="project[extended_metadata_attributes][data][Design_Project][Design_dataSharingPlan_Project][Design_dataSharingPlan_recordLinkage_Project]"][value=""]').prop('checked', true);
+}
+
+//project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_masking_Project_Design_interventional_masking_description_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_phase_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_allocation_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_offLabelUse_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_masking_Project_Design_interventional_masking_general_Project
+
+
+//project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_masking_Project_Design_interventional_masking_roles_Project
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_masking_Project_Design_interventional_masking_description_Project', metadata?.resource?.design?.interventional?.masking?.description);
+
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_phase_Project', metadata?.resource?.design?.interventional?.phase);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_allocation_Project', metadata?.resource?.design?.interventional?.allocation);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_offLabelUse_Project', metadata?.resource?.design?.interventional?.offLabelUse);
+
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_interventional_Project_Design_interventional_masking_Project_Design_interventional_masking_roles_Project', metadata?.resource?.design?.interventional?.masking?.roles);
+
+const maskingGeneral = metadata?.resource?.design?.interventional?.masking?.general;
+if (maskingGeneral === true || maskingGeneral === 'true') {
+    $j('input[name="project[extended_metadata_attributes][data][Design_Project][Design_interventional_Project][Design_interventional_masking_Project][Design_interventional_masking_general_Project]"][value="true"]').prop('checked', true).trigger('change');
+
+} else if (maskingGeneral === false || maskingGeneral === 'false') {
+    $j('input[name="project[extended_metadata_attributes][data][Design_Project][Design_interventional_Project][Design_interventional_masking_Project][Design_interventional_masking_general_Project]"][value="false"]').prop('checked', true).trigger('change');
+} else {
+    $j('input[name="project[extended_metadata_attributes][data][Design_Project][Design_interventional_Project][Design_interventional_masking_Project][Design_interventional_masking_general_Project]"][value=""]').prop('checked', true).trigger('change');
+}
+console.log(metadata?.resource?.design?.nonInterventional);//I should test the nonInterventional!
+//project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_targetFollowUpDuration_Project_Design_nonInterventional_targetFollowUpDuration_number_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_targetFollowUpDuration_Project_Design_nonInterventional_targetFollowUpDuration_frequency_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_biospecimenDescription_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_targetFollowUpDuration_Project_Design_nonInterventional_targetFollowUpDuration_timeUnit_Project
+
+//project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_timePerspectives_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_biospecimenRetention_Project
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_targetFollowUpDuration_Project_Design_nonInterventional_targetFollowUpDuration_number_Project', metadata?.resource?.design?.nonInterventional?.targetFollowUpDuration?.number);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_targetFollowUpDuration_Project_Design_nonInterventional_targetFollowUpDuration_frequency_Project', metadata?.resource?.design?.nonInterventional?.targetFollowUpDuration?.frequency);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_biospecimenDescription_Project', metadata?.resource?.design?.nonInterventional?.biospecimenDescription);
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_targetFollowUpDuration_Project_Design_nonInterventional_targetFollowUpDuration_timeUnit_Project', metadata?.resource?.design?.nonInterventional?.targetFollowUpDuration?.timeUnit);
+
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_timePerspectives_Project', metadata?.resource?.design?.nonInterventional?.timePerspectives);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_nonInterventional_Project_Design_nonInterventional_biospecimenRetention_Project', metadata?.resource?.design?.nonInterventional?.biospecimenRetention);
+//project_extended_metadata_attributes_data_Design_Project_Design_dataProviders_Project
+//project_extended_metadata_attributes_data_Design_Project_Design_dataProvidersNumber_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataProviders_Project', metadata?.resource?.design?.dataProviders);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_dataProvidersNumber_Project', metadata?.resource?.design?.dataProvidersNumber);
+
+//project_extended_metadata_attributes_data_Design_Project_Design_centersNumber_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_centersNumber_Project', metadata?.resource?.design?.centersNumber);
+
+//project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_Interventional_Project
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_interventional_Project', metadata?.resource?.design?.studyType?.interventional);
+setFieldValue('#project_extended_metadata_attributes_data_Design_Project_Design_mortalityData_Project', metadata.resource.design?.mortalityData);
+
+
+
+
+setFieldValue('#project_extended_metadata_attributes_data_Resource_nutritionalData_Project', metadata.resource?.nutritionalData);
+setFieldValue('#project_extended_metadata_attributes_data_Resource_chronicDiseases_Project', metadata.resource?.chronicDiseases);

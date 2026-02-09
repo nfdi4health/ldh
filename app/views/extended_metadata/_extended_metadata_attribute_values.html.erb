@@ -35,5 +35,15 @@
         window.collapseAll = function() {
             panelcollaps.removeClass('in');
         };
+        var projectNumber = $j('label:contains("Id of the project")').parent().contents().last().text().trim();
+        console.log(projectNumber);
+
+        if (projectNumber) {
+            var url = `https://health-study-hub.de/resource/`+ projectNumber;
+
+            $j(".extended_metadata").contents().filter(function() {
+              return this.nodeType === 3; // Nur Text-Knoten
+            }).first().replaceWith($j('<a href="' + url + '" target="_blank"> ' + projectNumber + '</a>'));
+        }
     });
 </script>

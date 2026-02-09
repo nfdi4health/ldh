@@ -1,3 +1,29 @@
+<% if extended_metadata_type.enabled? && extended_metadata_type.title == "Nfdi4Health MDS 3.3" %>
+  <div id="exm_fetch" class="form-group markdown-body seek-description">
+
+  <!-- ERROR PLACEHOLDER -->
+    <div id="metadata-fetch-message" class="alert" style="display:none;"></div>
+
+    <h4>Prefill Nfdi4Health Metadata Schema </h4>
+
+    <div>
+      <input type="text" id="search-input">
+      <!-- select id="options-input">
+        < option>GCHSH</option>
+        < option>clinical.gov</option>
+      </select -->
+      <button type="button" id="fetch-metadata">Fetch</button>
+    </div>
+
+      <p class="help-block">
+        Enter a resource ID (e.g. <code>nfdi4health-xxxxx, DRKS000xxxxxx, NCT000xxxxx</code>) to fetch extended metadata from choosen source.
+      </p>
+
+    </div>
+
+<% end %>
+
+
 <% extended_metadata_type.extended_metadata_attributes.each do |attribute| %>
   <div id="<%= "wrapper-#{attribute.title.parameterize}" %>" class="form-group">
     <%= extended_metadata_form_field_for_attribute(attribute,resource, parent_resource) %>
@@ -6,3 +32,215 @@
     <% end %>
   </div>
 <% end %>
+
+<script>
+    function updateDesignProjectUI() {
+      var class_type_Values = $j('#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project').val()|| [];
+      var study_type_Noninter_Values = $j('#project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_nonInterventional_Project').val()|| [];
+      var design_centers_Values = $j('#project_extended_metadata_attributes_data_Design_Project_Design_centers_Project').val()|| [];
+      var design_DataProv_Values = $j('#project_extended_metadata_attributes_data_Design_Project_Design_dataProviders_Project').val()|| [];
+      var primaryDesign_Values = $j('#project_extended_metadata_attributes_data_Design_Project_Design_primaryDesign_Project').val()|| [];
+      console.log(`${class_type_Values},${design_centers_Values}`)
+
+
+      if (class_type_Values.length === 0) {
+          $j('#wrapper-design_project').hide();
+      } else if (class_type_Values.some(value => ["Study","Substudy","Registry","Secondary data source"].includes(value))) {
+          $j('#wrapper-design_project').show();
+      } else {
+          $j('#wrapper-design_project').hide();
+      }
+
+      if(
+        (class_type_Values.some(value => ["Study","Substudy"].includes(value)) &&
+        study_type_Noninter_Values.some(value => ["Longitudinal", "Cohort", "Case-cohort", "Birth cohort", "Trend", "Panel"].includes(value))) ||
+        class_type_Values.some(value => ["Registry","Secondary data source"].includes(value))
+      ){
+        $j('#design_mortalitydata_project').show();
+      } else {
+        $j('#design_mortalitydata_project').hide();
+      }
+
+      if (class_type_Values.some(value => ["Study","Substudy"].includes(value))){
+        $j('#design_administrativeinformation_project').show();
+        $j('#design_centers_project').show();
+        $j('#design_exposures_name_project').show();
+        $j('#design_exposures_name_project').show();
+        $j('#design_noninterventional_timeperspectives_project').show();
+      } else {
+        $j('#design_administrativeinformation_project').hide();
+        $j('#design_centers_project').hide();
+        $j('#design_exposures_name_project').hide();
+        $j('#design_exposures_name_project').hide();
+        $j('#design_noninterventional_timeperspectives_project').hide();
+      }
+
+      if (class_type_Values.some(value => ["Registry","Secondary data source"].includes(value))){
+        $j('#design_dataproviders_project').show();
+      } else {
+        $j('#design_dataproviders_project').hide();
+      }
+
+      if(class_type_Values.some(value => ["Study","Substudy"].includes(value)) && design_centers_Values.some(value => ["Multicentric"].includes(value))){
+
+        $j('#design_centersnumber_project').show();
+      } else {
+        $j('#design_centersnumber_project').hide();
+      }
+
+      if(class_type_Values.some(value => ["Registry","Secondary data source"].includes(value)) && design_DataProv_Values.some(value => ["Several data providers"].includes(value))){
+        $j('#design_dataprovidersnumber_project').show();
+      } else {
+        $j('#design_dataprovidersnumber_project').hide();
+      }
+
+      if(class_type_Values.some(value => ["Study","Substudy"].includes(value)) && primaryDesign_Values.some(value => ["Interventional"].includes(value))){
+        $j('#design_interventions_project').show();
+        $j('#design_interventional_project').show();
+      } else {
+        $j('#design_interventions_project').hide();
+        $j('#design_interventional_project').hide();
+      }
+
+      if(
+        (class_type_Values.some(value => ["Study","Substudy"].includes(value)) && primaryDesign_Values.some(value => ["Non-interventional"].includes(value))) ||
+        class_type_Values.some(value => ["Registry","Secondary data source"].includes(value))
+      ){
+        $j('#design_exposures_project').show();
+        $j('#design_noninterventional_project').show();
+      } else {
+        $j('#design_exposures_project').hide();
+        $j('#design_noninterventional_project').hide();
+      }
+    }
+
+    function updateContributorsUI(el) {
+      var  id = $j(el).attr('id');
+      var match = id && id.match(/Project_(\d+)_Resource_contributors_nameType_Project/);
+      if (!match) {
+        console.warn("ID passt nicht zum erwarteten Muster:", id);
+        return; // aussteigen, wenn das Element nicht passt
+      }
+      var index = match[1];
+      var selectedValues = $j(el).val();
+      console.log(`${id},${index},${selectedValues}`)
+
+      if (!selectedValues || selectedValues.length === 0) {
+          $j(`#resource_contributors_organisational_project_${index}`).hide();
+          $j(`#resource_contributors_personal_project_${index}`).hide();
+      } else if (selectedValues.includes("Personal")) {
+          $j(`#resource_contributors_personal_project_${index}`).show();
+          $j(`#resource_contributors_organisational_project_${index}`).hide();
+      } else {
+          $j(`#resource_contributors_organisational_project_${index}`).show();
+          $j(`#resource_contributors_personal_project_${index}`).hide();
+      }
+    }
+
+    function updateprimaryDesignUI(el) {
+      var selectedValues = $j(el).val();
+      var selectedidx = $j(el).index();
+
+      if (!selectedValues || selectedValues.length === 0) {
+          $j('#design_studytype_project').hide();
+      } else if (selectedValues.includes("Interventional")) {
+          $j('#design_studytype_project').show();
+          $j('#design_studytype_interventional_project').show();
+          $j('#design_studytype_noninterventional_project').hide();
+      } else {
+          $j('#design_studytype_project').show();
+          $j('#design_studytype_interventional_project').hide();
+          $j('#design_studytype_noninterventional_project').show();
+      }
+    }
+
+    $j(document).ready(function () {
+        $j('#fetch-metadata').on('click', function(e) {
+            e.preventDefault();
+            jQuery.ajax({
+                url: '/metadata_fetch',
+                method: 'POST',
+                data: {
+                    search: $j('#search-input').val(),
+                    options: $j('#options-input').val()
+                },
+                dataType: 'script'
+            });
+        });
+      $j('#wrapper-resource_identifier_project').hide();
+      $j('#resource_contributors_organisational_project_0').hide();
+      $j('#resource_contributors_personal_project_0').hide();
+      $j('#wrapper-design_project').hide();
+      $j('#design_studytype_project').hide();
+      $j("input[type='radio'][name='project[extended_metadata_attributes][data][Resource_chronicDiseases_Project]'][value='false']").prop("checked", true);
+      $j("input[type='radio'][name='project[extended_metadata_attributes][data][Resource_nutritionalData_Project]'][value='false']").prop("checked", true);
+      $j("input[type='radio'][name='project[extended_metadata_attributes][data][Design_Project][Design_dataSharingPlan_Project][Design_dataSharingPlan_recordLinkage_Project]'][value='false']").prop("checked", true);
+      $j('#design_mortalitydata_project').hide();
+      $j('#design_administrativeinformation_project').hide();
+      $j('#design_centers_project').hide();
+
+      $j('#design_exposures_project').hide();
+      $j('#design_exposures_name_project').hide();
+      $j('#design_exposures_groupslabel_project').hide();
+      $j('#design_noninterventional_timeperspectives_project').hide();
+      $j('#design_dataproviders_project').hide();
+      $j('#design_dataprovidersnumber_project').hide();
+      $j('#design_interventional_project').hide();
+      $j('#design_noninterventional_project').hide();
+      $j('#design_interventions_project').hide();
+      setTimeout(() => {
+        updateDesignProjectUI();
+
+        [
+          '#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project',
+          '#project_extended_metadata_attributes_data_Design_Project_Design_primaryDesign_Project',
+          '#project_extended_metadata_attributes_data_Design_Project_Design_centers_Project',
+          '#project_extended_metadata_attributes_data_Design_Project_Design_dataProviders_Project',
+          '#project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_nonInterventional_Project'
+        ].forEach(id => $j(id).trigger('change'));
+      }, 150);
+
+      $j('[id^="project_extended_metadata_attributes_data_Resource_contributors_Project_"][id$="_Resource_contributors_nameType_Project"]').each(function () {
+        updateContributorsUI(this);
+      });
+
+      $j('#project_extended_metadata_attributes_data_Design_Project_Design_primaryDesign_Project').each(function () {
+        updateprimaryDesignUI(this)
+      });
+
+
+
+      $j('#project_extended_metadata_attributes_data_Resource_classification_Project_Resource_classification_type_Project, #project_extended_metadata_attributes_data_Design_Project_Design_primaryDesign_Project, #project_extended_metadata_attributes_data_Design_Project_Design_centers_Project, #project_extended_metadata_attributes_data_Design_Project_Design_dataProviders_Project, #project_extended_metadata_attributes_data_Design_Project_Design_studyType_Project_Design_studyType_nonInterventional_Project').on('change', function () {
+          updateDesignProjectUI()
+      });
+
+      $j(document).on('change', '[id^="project_extended_metadata_attributes_data_Resource_contributors_Project_"][id$="_Resource_contributors_nameType_Project"]', function () {
+        updateContributorsUI(this);
+        });
+      var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType === 1) {
+                        var newPanels = $j(node).find('[id^="project_extended_metadata_attributes_data_Resource_contributors_Project_"]');
+
+                        newPanels.each(function () {
+                            var id = $j(this).attr('id');
+                            var indexMatch = id.match(/Project_(\d+)_/);
+                            if (indexMatch) {
+                                var index = indexMatch[1];
+                                $j(`#resource_contributors_organisational_project_${index}`).hide();
+                                $j(`#resource_contributors_personal_project_${index}`).hide();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+      $j('#project_extended_metadata_attributes_data_Design_Project_Design_primaryDesign_Project').on('change', function () {
+        updateprimaryDesignUI(this)
+      });
+    });
+
+</script>

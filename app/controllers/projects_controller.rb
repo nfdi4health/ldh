@@ -1,6 +1,9 @@
 require 'zip'
 require 'securerandom'
 require 'json'
+require 'nfdi4health/csh_client'
+require 'seek/util'
+
 
 class ProjectsController < ApplicationController
   include Seek::IndexPager
@@ -45,7 +48,7 @@ class ProjectsController < ApplicationController
   before_action :validate_message_log_for_create, only: [:administer_create_project_request, :respond_create_project_request]
   before_action :validate_message_log_for_import, only: [:administer_import_project_request, :respond_import_project_request]
   before_action :parse_message_log_details, only: [:administer_create_project_request, :administer_import_project_request]
-  before_action :check_message_log_programme_permissions, only: [:administer_create_project_request, :administer_import_project_request, 
+  before_action :check_message_log_programme_permissions, only: [:administer_create_project_request, :administer_import_project_request,
                                                                  :respond_create_project_request, :respond_import_project_request], if: Proc.new{Seek::Config.programmes_enabled}
 
   skip_before_action :project_membership_required
@@ -70,7 +73,7 @@ class ProjectsController < ApplicationController
     @requests = ProjectCreationMessageLog.pending_requests.select do |r|
       r.can_respond_project_creation_request?(current_user)
     end
-        
+
     respond_to do |format|
       format.html
     end
@@ -522,7 +525,6 @@ class ProjectsController < ApplicationController
     end
   end
 
-
   # GET /projects/1
   def show
     respond_to do |format|
@@ -642,6 +644,192 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def publish_to_csh
+    @project = Project.find(params[:id])
+
+    data_project = Nfdi4Health::Preparation_json.new
+    transforming_api_data = data_project.transforming_api(@project, ProjectSerializer, 'projects')
+    begin
+      endpoints = Nfdi4Health::Client.new()
+      endpoints.send_transforming_api(transforming_api_data.to_json)
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = if e.response
+                        "HTTP Status: #{e.response.code} - #{e.response.body}"
+                      else
+          "RestClient::ExceptionWithResponse occurred without a response: #{e.message}"
+                        end
+      respond_to do |format|
+          format.html { redirect_to(@project) }
+          format.rdf { render template: 'rdf/show' }
+          format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+
+      return
+    rescue RestClient::RequestTimeout => e
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError => e
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    sender_project_merged=data_project.header(endpoints, @current_user.to_json,current_person)
+    begin
+      endpoints.get_token
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,'get_token')
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+    token_respond_hash = JSON.parse(endpoints.to_json)
+    access_token = token_respond_hash['token']
+    access_token_hash = JSON.parse(access_token)
+    one_time_token = access_token_hash['access_token']
+    begin
+      endpoints.publish_csh(sender_project_merged.to_json,one_time_token)
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,'publish_csh')
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    if !JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource'].nil?
+      identifier = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])['resource']['identifier']
+      if !sender_project_merged['resource']['identifier'].nil?
+        flash[:notice] ="#{t('project')} was successfully updated with ID #{identifier}. Your data is still incomplete. Please consider the error message"
+      else
+        flash[:notice] ="#{t('project')} was successfully created with ID #{identifier}. Your data is still incomplete. Please consider the error message"
+        em = @project.extended_metadata
+        jem = JSON.parse(em.json_metadata)
+        jem['Resource_identifier_Project'] = identifier
+        em.update_column(:json_metadata, jem.to_json)
+      end
+    else
+      flash[:notice] = JSON.parse(JSON.parse(endpoints.to_json)['endpoint'])
+    end
+
+    #csh confirm post request with ID
+    begin
+
+      endpoints.publish_csh_confirm(identifier,one_time_token)
+
+    rescue RestClient::ExceptionWithResponse => e
+      flash[:error] = endpoints.handle_restclient_error(e,'confirm_publish_csh')
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue RestClient::RequestTimeout
+      flash[:error] = 'Request Timeout: The server took too long to respond.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue SocketError
+      flash[:error] = 'Network Error: Please check your internet connection.'
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    rescue StandardError => e
+      flash[:error] = "An unexpected error occurred: #{e.message}"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+        format.rdf { render template: 'rdf/show' }
+        format.json { render json: { error: flash[:error] }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    flash[:notice] ="#{t('project')} was successfully confirmed to be published with ID #{identifier}. Your submission will be checked by a data steward. Afterward you will be notified by email."
+
+
+    respond_to do |format|
+      format.html { redirect_to(@project) }
+      format.rdf { render template: 'rdf/show' }
+      format.json { render json: @project, include: [params[:include]] }
+    end
+  end
+
   # PUT /projects/1   , polymorphic: [:organism]
   def update
     if params[:project]&.[](:ordered_investigation_ids)
@@ -724,6 +912,7 @@ class ProjectsController < ApplicationController
       format.html { redirect_to project_path(@project) }
     end
   end
+
 
   def admin_members
     respond_with(@project)
@@ -1043,7 +1232,6 @@ class ProjectsController < ApplicationController
     return true
   end
 
-
   def add_and_remove_members_and_institutions
     groups_to_remove = params[:group_memberships_to_remove] || []
     people_and_institutions_to_add = params[:people_and_institutions_to_add] || []
@@ -1186,11 +1374,11 @@ class ProjectsController < ApplicationController
     return unless @programme || params['programme']
 
     unless @programme
-      if params['programme']['id']
-        @programme = Programme.find(params['programme']['id'])
-      else
-        @programme = Programme.new(params.require(:programme).permit([:title]))
-      end
+      @programme = if params['programme']['id']
+                     Programme.find(params['programme']['id'])
+                   else
+        Programme.new(params.require(:programme).permit([:title]))
+                   end
     end
 
     if @programme.new_record?

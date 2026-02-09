@@ -349,6 +349,7 @@ SEEK::Application.routes.draw do
       post :request_membership
       get :overview
       get :order_investigations
+      get :publish_to_csh
       get :administer_join_request
       post :respond_join_request
       get :guided_join
@@ -425,6 +426,7 @@ SEEK::Application.routes.draw do
       get :export_isatab_json
       get :export_isa, action: :export_isa
       get :manage
+      get :publish_to_csh
       get :order_studies
       patch :manage_update
       get :update_from_fairdata_station
@@ -459,6 +461,7 @@ SEEK::Application.routes.draw do
       post :check_gatekeeper_required
       post :publish_related_items
       post :publish
+      get :publish_to_csh
       get :published
       get :isa_children
       get :manage
@@ -489,7 +492,7 @@ SEEK::Application.routes.draw do
       post :add_metadata
       post :upload_file
       post :create_folder
-    end  
+    end
   end
 
   # to be removed as STI does not work in too many places
@@ -914,4 +917,7 @@ SEEK::Application.routes.draw do
 
   # for the api docs avoids special rewrite rules
   get 'api' => 'homes#api_docs'
+
+  post "metadata_fetch", to: "metadata_fetch#fetch", as: :metadata_fetch, defaults: { format: :js }
+
 end

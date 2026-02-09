@@ -30,6 +30,7 @@
 
     <%= render partial: 'assets/manage_specific_attributes', locals: { f: study_fields } if show_form_manage_specific_attributes? %>
 
+
     <%= study_fields.fancy_multiselect :publications, { other_projects_checkbox: true, name: "isa_study[study][publication_ids]" } %>
 
     <%= render :partial=> "assets/discussion_links_form", :locals=>{:resource => @isa_study.study} -%>
