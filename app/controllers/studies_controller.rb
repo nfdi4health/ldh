@@ -361,11 +361,11 @@ class StudiesController < ApplicationController
   end
   def publish_to_csh
     @study = Study.find(params[:id])
-    data_study = Nfdi4Health::Preparation_json.new
+    data_study = Nfdi4health::Preparation_json.new
     transforming_api_data = data_study.transforming_api(@study, StudySerializer, 'studies')
 
     begin
-      endpoints = Nfdi4Health::Client.new()
+      endpoints = Nfdi4health::Client.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

@@ -647,10 +647,10 @@ class ProjectsController < ApplicationController
   def publish_to_csh
     @project = Project.find(params[:id])
 
-    data_project = Nfdi4Health::Preparation_json.new
+    data_project = Nfdi4health::Preparation_json.new
     transforming_api_data = data_project.transforming_api(@project, ProjectSerializer, 'projects')
     begin
-      endpoints = Nfdi4Health::Client.new()
+      endpoints = Nfdi4health::Client.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response

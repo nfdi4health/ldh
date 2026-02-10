@@ -1,7 +1,7 @@
 require 'rest-client'
 require 'uri'
 
-module Nfdi4Health
+module Nfdi4health
 
   class Client
     attr_accessor :transformed
