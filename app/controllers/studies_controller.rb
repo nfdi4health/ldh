@@ -365,7 +365,7 @@ class StudiesController < ApplicationController
     transforming_api_data = data_study.transforming_api(@study, StudySerializer, 'studies')
 
     begin
-      endpoints = Nfdi4health::Client.new()
+      endpoints = Nfdi4health::CshClient.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response
