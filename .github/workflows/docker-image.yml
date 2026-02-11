@@ -12,8 +12,6 @@ on:
       - full-test-suite
       - seek-1.16
 
-  pull_request:
-
 jobs:
   build:
     name: "Build Image"
