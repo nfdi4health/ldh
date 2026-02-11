@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_17_142856) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_11_160844) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action"
     t.string "format"
@@ -695,7 +695,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_17_142856) do
     t.index ["purpose"], name: "index_fair_data_station_uploads_on_purpose"
   end
 
-  create_table "favourite_group_memberships", id: :integer, force: :cascade do |t|
+  create_table "favourite_group_memberships", force: :cascade do |t|
     t.integer "person_id"
     t.integer "favourite_group_id"
     t.integer "access_type", limit: 1
@@ -1168,7 +1168,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_17_142856) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
     t.integer "resource_owner_id", null: false
-    t.bigint "application_id", null: false
+    t.bigint "application_id"
     t.string "token", null: false
     t.integer "expires_in", null: false
     t.text "redirect_uri", null: false
@@ -1184,7 +1184,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_17_142856) do
 
   create_table "oauth_access_tokens", force: :cascade do |t|
     t.integer "resource_owner_id"
-    t.bigint "application_id", null: false
+    t.bigint "application_id"
     t.string "token", null: false
     t.string "refresh_token"
     t.integer "expires_in"
@@ -2044,7 +2044,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_17_142856) do
     t.integer "descendant_id"
   end
 
-  create_table "strains", id: :integer, force: :cascade do |t|
+  create_table "strains", force: :cascade do |t|
     t.string "title"
     t.integer "organism_id"
     t.datetime "created_at", precision: nil
@@ -2390,5 +2390,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_17_142856) do
   end
 
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
+  add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
+  add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
 end
