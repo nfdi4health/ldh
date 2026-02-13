@@ -2390,5 +2390,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_11_160844) do
   end
 
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
+  add_foreign_key "oauth_access_grants", "users", column: "resource_owner_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
+  add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id"
 end
