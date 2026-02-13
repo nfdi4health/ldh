@@ -1167,7 +1167,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_11_160844) do
   end
 
   create_table "oauth_access_grants", force: :cascade do |t|
-    t.integer "resource_owner_id", null: false
+    t.bigint "resource_owner_id"
     t.bigint "application_id"
     t.string "token", null: false
     t.integer "expires_in", null: false
@@ -1183,7 +1183,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_11_160844) do
   end
 
   create_table "oauth_access_tokens", force: :cascade do |t|
-    t.integer "resource_owner_id"
+    t.bigint "resource_owner_id"
     t.bigint "application_id"
     t.string "token", null: false
     t.string "refresh_token"
@@ -2390,7 +2390,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_11_160844) do
   end
 
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
-  add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
-  add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
 end
