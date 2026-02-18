@@ -44,7 +44,7 @@ class ContentBlob < ApplicationRecord
 
   include Seek::Data::Checksums
 
-  CHUNK_SIZE = 2 ** 12
+  CHUNK_SIZE = 10 ** 6 # 1 MB
 
   acts_as_fleximage do
     image_directory Seek::Config.temporary_filestore_path + '/image_assets'
@@ -84,7 +84,12 @@ class ContentBlob < ApplicationRecord
   end
 
   def file_extension
-    original_filename&.split('.')&.last&.downcase
+    split_filename = original_filename&.split('.')
+    if split_filename && split_filename.length > 2
+      extension = split_filename[-2, 2]&.join('.')&.downcase
+      return extension unless mime_types_for_extension(extension).empty?
+    end
+    split_filename&.last&.downcase
   end
 
   def make_temp_copy
@@ -273,7 +278,7 @@ class ContentBlob < ApplicationRecord
     raise Exception, 'You cannot define both :data content and a :tmp_io_object' unless @data.nil? || @tmp_io_object.nil?
     return unless @tmp_io_object
 
-    if @tmp_io_object.respond_to?(:path)
+    if @tmp_io_object.respond_to?(:path) && File.exist?(@tmp_io_object.path)
       @tmp_io_object.flush if @tmp_io_object.respond_to? :flush
       if @tmp_io_object.path
         FileUtils.cp @tmp_io_object.path, filepath
@@ -282,9 +287,7 @@ class ContentBlob < ApplicationRecord
         if @tmp_io_object.path.start_with?("#{Dir.tmpdir}#{File::SEPARATOR}")
           File.delete(@tmp_io_object.path)
         end
-
       end
-
     else
       @tmp_io_object.rewind
       File.open(filepath, 'wb+') do |f|
@@ -293,6 +296,7 @@ class ContentBlob < ApplicationRecord
         end
       end
     end
+
     @tmp_io_object = nil
   end
 

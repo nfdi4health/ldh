@@ -14,7 +14,7 @@ class SamplesController < ApplicationController
 
   before_action :auth_to_create, only: %i[new create batch_create]
 
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
   include Seek::Publishing::PublishingCommon
 
   api_actions :index, :show, :create, :update, :destroy, :batch_create
@@ -76,6 +76,7 @@ class SamplesController < ApplicationController
       format.html
       format.json {render json: @sample, include: [params[:include]]}
       format.rdf { render template: 'rdf/show' }
+      format.jsonld { render body: @sample.to_schema_ld }
     end
   end
 
@@ -177,12 +178,12 @@ class SamplesController < ApplicationController
         begin
           converted_params = param_converter.convert(par)
           sample = Sample.find(par[:id])
-          raise 'shouldnt get this far without manage rights' unless sample.can_manage?
+          raise 'You are not allowed to edit this sample.' unless sample.can_edit?
           sample = update_sample_with_params(converted_params, sample)
           saved = sample.save
           errors.push({ ex_id: par[:ex_id], error: sample.errors.messages }) unless saved
-        rescue
-          errors.push({ ex_id: par[:ex_id], error: "Can not be updated." })
+        rescue StandardError => e
+          errors.push({ ex_id: par[:ex_id], error: e.message })
         end
       end
       raise ActiveRecord::Rollback if errors.any?
@@ -236,14 +237,12 @@ class SamplesController < ApplicationController
         sample_attribute_title = sample_attribute&.title
         if sample_attribute&.sample_attribute_type&.seek_sample_multi?
           attr_value = s.get_attribute_value(sample_attribute_title)
-          attr_value&.any? { |v| v[:title].downcase.include?(attribute_filter_value) }
-        elsif sample_attribute&.sample_attribute_type&.seek_sample?
-          s.get_attribute_value(sample_attribute_title)[:title]&.downcase&.include?(attribute_filter_value)
+          attr_value&.any? { |v| v&.dig(:title)&.downcase&.include?(attribute_filter_value) }
         elsif sample_attribute&.sample_attribute_type&.seek_cv_list?
           attr_value = s.get_attribute_value(sample_attribute_title)
           attr_value&.any? { |v| v.downcase.include?(attribute_filter_value) }
-        else
-          s.get_attribute_value(sample_attribute_title)&.downcase&.include?(attribute_filter_value)
+				else
+          s.get_attribute_value(sample_attribute_title)&.to_s&.downcase&.include?(attribute_filter_value)
         end
       end
     end
@@ -344,13 +343,11 @@ class SamplesController < ApplicationController
       s.send(link).any? do |x|
         selected = x.sample_type.template_id == options[:template_id].to_i
         if template_attribute.sample_attribute_type.seek_sample_multi?
-          selected = x.get_attribute_value(template_attribute_title)&.any? { |v| v[:title].downcase.include?(options[:attribute_value]) } if template_attribute.present? && selected
-        elsif  template_attribute.sample_attribute_type.seek_sample?
-          selected = x.get_attribute_value(template_attribute_title)&[:title].downcase&.include?(options[:attribute_value]) if template_attribute.present? && selected
+          selected = x.get_attribute_value(template_attribute_title)&.any? { |v| v&.dig(:title).downcase.include?(options[:attribute_value]) } if template_attribute.present? && selected
         elsif template_attribute.sample_attribute_type.seek_cv_list?
           selected = x.get_attribute_value(template_attribute_title)&.any? { |v| v.downcase.include?(options[:attribute_value]) } if template_attribute.present? && selected
-        else
-          selected = x.get_attribute_value(template_attribute_title)&.downcase&.include?(options[:attribute_value]&.downcase) if template_attribute.present? && selected
+				else
+          selected = x.get_attribute_value(template_attribute_title)&.to_s&.downcase&.include?(options[:attribute_value]&.downcase) if template_attribute.present? && selected
         end
         selected || filter_linked_samples([x], link, options, template_attribute).present?
       end

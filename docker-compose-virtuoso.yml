@@ -11,7 +11,7 @@ services:
 
   seek: # The SEEK application
     #build: .
-    image: fairdom/seek:1.16
+    image: fairdom/seek:1.17
     container_name: seek
     command: docker/entrypoint.sh
     restart: always
@@ -22,6 +22,7 @@ services:
       NO_ENTRYPOINT_WORKERS: 1
     env_file:
       - docker/db.env
+      - docker/virtuoso.env
     volumes:
       - seek-filestore:/seek/filestore
       - seek-cache:/seek/tmp/cache
@@ -38,7 +39,7 @@ services:
 
   seek_workers: # The SEEK delayed job workers
     #build: .
-    image: fairdom/seek:1.16
+    image: fairdom/seek:1.17
     container_name: seek-workers
     command: docker/start_workers.sh
     restart: always
@@ -46,10 +47,9 @@ services:
       RAILS_ENV: production
       SOLR_PORT: 8983
       SOLR_HOST: solr
-      DBA_PASSWORD: wibble
-      VIRTUOSO: 'true'
     env_file:
       - docker/db.env
+      - docker/virtuoso.env
     volumes:
       - seek-filestore:/seek/filestore
       - seek-cache:/seek/tmp/cache
@@ -77,16 +77,16 @@ services:
       - /opt/solr/server/solr/configsets/seek_config 
 
   virtuoso:
-    image: tenforce/virtuoso
+    image: openlink/virtuoso-opensource-7:7.2.15
     container_name: seek-virtuoso
     restart: always
     ports:
       - "8890:8890"
       - "1111:1111"
     environment:
-      DBA_PASSWORD: wibble
+      DBA_PASSWORD: CHANGE_ME
     volumes:
-      - seek-virtuoso-data:/data
+      - seek-virtuoso-data:/database
 
 
 volumes:

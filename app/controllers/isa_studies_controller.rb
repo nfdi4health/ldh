@@ -1,4 +1,4 @@
-class IsaStudiesController < ApplicationController
+class ISAStudiesController < ApplicationController
   include Seek::AssetsCommon
   include Seek::Publishing::PublishingCommon
 
@@ -9,16 +9,20 @@ class IsaStudiesController < ApplicationController
   after_action :update_sample_json_metadata, only: :update
 
   def new
-    @isa_study = IsaStudy.new({ study: { investigation_id: params[:investigation_id] } })
+    @isa_study = ISAStudy.new({ study: { investigation_id: params[:investigation_id] } })
   end
 
   def create
-    @isa_study = IsaStudy.new(isa_study_params)
+    @isa_study = ISAStudy.new(isa_study_params)
     update_sharing_policies @isa_study.study
     @isa_study.source.policy = @isa_study.study.policy
     @isa_study.sample_collection.policy = @isa_study.study.policy
     @isa_study.source.contributor = User.current_user.person
     @isa_study.sample_collection.contributor = User.current_user.person
+    @isa_study.source.title = "#{@isa_study.study.title} - Source Sample Type" if @isa_study.source.title.blank?
+    @isa_study.source.description = "Source Sample Type linked to Study '#{@isa_study.study.title}'." if @isa_study.source.description.blank?
+    @isa_study.sample_collection.title = "#{@isa_study.study.title} - Sample Collection Sample Type" if @isa_study.sample_collection.title.blank?
+    @isa_study.sample_collection.description = "Sample Collection Sample Type linked to Study '#{@isa_study.study.title}'." if @isa_study.sample_collection.description.blank?
     @isa_study.study.sample_types = [ @isa_study.source, @isa_study.sample_collection ]
 
     if @isa_study.save
@@ -169,7 +173,7 @@ class IsaStudiesController < ApplicationController
   end
 
   def find_requested_item
-    @isa_study = IsaStudy.new
+    @isa_study = ISAStudy.new
     @isa_study.populate(params[:id])
 
     @isa_study.errors.add(:study, "The #{t('isa_study')} was not found.") if @isa_study.study.nil?

@@ -86,9 +86,9 @@ namespace :seek_dev do
   task(:dump_controlled_vocab, [:id] => :environment) do |_t, args|
     vocab = SampleControlledVocab.find(args.id)
     json = { title: vocab.title, description: vocab.description, ols_root_term_uris: vocab.ols_root_term_uris,
-             source_ontology: vocab.source_ontology, terms: [] }
+             source_ontology: vocab.source_ontology, sample_controlled_vocab_terms_attributes: [] }
     vocab.sample_controlled_vocab_terms.each do |term|
-      json[:terms] << { label: term.label, iri: term.iri, parent_iri: term.parent_iri }
+      json[:sample_controlled_vocab_terms_attributes] << { label: term.label, iri: term.iri, parent_iri: term.parent_iri }
     end
     File.open("cv-dump-#{args.id}.json", 'w') do |f|
       f.write(JSON.pretty_generate(json))
@@ -448,5 +448,20 @@ namespace :seek_dev do
       permission.update(access_type: Policy::MANAGING)
     end
 
+  end
+
+  task fetch_openalex_fields: :environment do
+    url = 'https://api.openalex.org/domains'
+    puts "Fetching from: #{url}"
+    res = URI.open(url)
+    json = res.read
+    doc = JSON.parse(json)
+    domains = doc['results'].map do |dom|
+      dom.slice('id', 'display_name', 'fields')
+    end
+
+    filename = Rails.root.join('config', 'default_data', 'controlled-vocabs', 'openalex_fields.json')
+    File.write(filename, JSON.pretty_generate(domains))
+    puts "Written to: #{filename}"
   end
 end

@@ -1,3 +1,5 @@
+require 'ror/client'
+
 class InstitutionsController < ApplicationController
   include Seek::IndexPager
   include CommonSweepers
@@ -19,9 +21,8 @@ class InstitutionsController < ApplicationController
   def show
     respond_to do |format|
       format.html # show.html.erb
-      # format.json { render layout: false, json: JSON.parse(JbuilderTemplate.new(view_context).api_format!(@institution).target!) }
-      #format.json { render json: @institution } #normal json
       format.json {render json: @institution, include: [params[:include]]}
+      format.jsonld { render body: @institution.to_schema_ld }
     end
   end
 
@@ -89,7 +90,9 @@ class InstitutionsController < ApplicationController
                            query: "%#{query}%").limit(params[:limit] || 10)
     items = results.map do |institution|
       { id: institution.id,
-        text: institution.title,
+        text: institution.base_title,
+        department: institution.department,
+        ror_id: institution.ror_id,
         web_page: institution.web_page,
         city: institution.city,
         country:institution.country,
@@ -114,6 +117,24 @@ class InstitutionsController < ApplicationController
     end
   end
 
+
+  def ror_search
+    client = Ror::Client.new
+    if params[:query].present?
+      response = client.query_name(params[:query])
+    elsif params[:ror_id].present?
+      response = client.fetch_by_id(params[:ror_id])
+    else
+      render json: { error: 'Missing ROR ID' }, status: 400 and return
+    end
+
+    if response.key?(:error)
+      render json: response, status: 500
+    else
+      render json: response
+    end
+  end
+
   # request all institutions, but specific to the sharing form which expects an array
   def request_all_sharing_form
     institution_list = Institution.order(:id).collect{ |institution| [institution.title, institution.id] }
@@ -127,7 +148,7 @@ class InstitutionsController < ApplicationController
   private
 
   def institution_params
-    params.require(:institution).permit(:title, :web_page, :address, :city, :country,
+    params.require(:institution).permit(:title, :web_page, :address, :city, :country, :ror_id, :department,
                                         discussion_links_attributes:[:id, :url, :label, :_destroy])
   end
 

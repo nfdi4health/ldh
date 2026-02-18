@@ -110,6 +110,16 @@ FactoryBot.define do
     end
   end
 
+  factory(:schema_org_sample_type, parent: :sample_type) do
+    title { 'SampleType to test schema.org' }
+    after(:build) do |type|
+      type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'title', pid: 'dc:title', sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), required: true, is_title: true, sample_type: type)
+      type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'description', pid: 'dc:description', sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), required: false, is_title: false, sample_type: type)
+      type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'enzyme', pid: 'http://purl.uniprot.org/core/enzyme', sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), required: false, is_title: false, sample_type: type)
+      type.sample_attributes << FactoryBot.build(:sample_attribute, title: 'weight', sample_attribute_type: FactoryBot.create(:weight_sample_attribute_type), unit: Unit.find_or_create_by(symbol: 'g', comment: 'gram'), required: false, is_title: false, sample_type: type)
+    end
+  end
+
   factory(:min_sample_type, parent: :sample_type) do
     title { 'A Minimal SampleType' }
     after(:build) do |type|
@@ -228,6 +238,7 @@ FactoryBot.define do
 
   factory(:fairdatastation_virtual_demo_sample_type, parent: :sample_type) do
     title { 'fair data station virtual demo'}
+    association :policy, factory: :public_policy
     after(:build) do |type, eval|
       type.sample_attributes << FactoryBot.build(:sample_attribute, sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), title:'Title', sample_type: type, is_title: true)
       type.sample_attributes << FactoryBot.build(:sample_attribute, sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), title:'Description', sample_type: type)
@@ -244,6 +255,7 @@ FactoryBot.define do
 
   factory(:fairdatastation_test_case_sample_type, parent: :sample_type) do
     title { 'fair data station test case'}
+    association :policy, factory: :public_policy
     after(:build) do |type, eval|
       type.sample_attributes << FactoryBot.build(:sample_attribute, sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), title:'Title', sample_type: type, is_title: true)
       type.sample_attributes << FactoryBot.build(:sample_attribute, sample_attribute_type: FactoryBot.create(:string_sample_attribute_type), title:'Description', sample_type: type)

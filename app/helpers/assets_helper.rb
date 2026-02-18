@@ -10,7 +10,7 @@ module AssetsHelper
       options[:preview_permissions] = show_form_manage_specific_attributes?
     end
     options[:button_text] ||= submit_button_text(item)
-    options[:cancel_path] = params[:single_page] ? single_page_path(id: params[:single_page]) : polymorphic_path(item)
+    options[:cancel_path] ||= params[:single_page] ? single_page_path(id: params[:single_page]) : polymorphic_path(item)
     options[:resource_name] = item.class.name.underscore
     options[:button_id] ||= "#{options[:resource_name]}_submit_btn"
 
@@ -234,6 +234,18 @@ module AssetsHelper
     tooltip_text_copasi_button = "Simulate your model locally using desk application CopasiUI."
 
     button= button_link_to('Simulate in CopasiUI', 'copasi', copasi_download_path, class: 'btn btn-primary btn-block', disabled: @blob.nil?, 'data-tooltip' => tooltip(tooltip_text_copasi_button))
+
+    button
+  end
+
+  def open_with_morpheus_button
+
+    blob  =   @display_model.morpheus_supported_content_blobs.first
+    download_path = polymorphic_path([@model, blob], action: :download)
+    morpheus_download_path =  "morpheus://"+request.host_with_port+download_path
+    tooltip_text_morpheus_button = "Simulate your model locally using desk application MorpheusUI."
+
+    button= button_link_to('Simulate in MorpheusUI', 'morpheus', morpheus_download_path, class: 'btn', 'data-tooltip' => tooltip(tooltip_text_morpheus_button))
 
     button
   end

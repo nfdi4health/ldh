@@ -17,9 +17,11 @@ class StudiesController < ApplicationController
 
   before_action :check_assays_are_for_this_study, only: %i[update]
 
+  before_action :set_isa_json_compliance, only: :manage
+
   include Seek::Publishing::PublishingCommon
   include Seek::AnnotationCommon
-  include Seek::IsaGraphExtensions
+  include Seek::ISAGraphExtensions
 
   api_actions :index, :show, :create, :update, :destroy
 
@@ -359,11 +361,11 @@ class StudiesController < ApplicationController
   end
   def publish_to_csh
     @study = Study.find(params[:id])
-    data_study = Nfdi4Health::Preparation_json.new
+    data_study = Nfdi4health::Preparation_json.new
     transforming_api_data = data_study.transforming_api(@study, StudySerializer, 'studies')
 
     begin
-      endpoints = Nfdi4Health::Client.new()
+      endpoints = Nfdi4health::CshClient.new()
       endpoints.send_transforming_api(transforming_api_data.to_json)
     rescue RestClient::ExceptionWithResponse => e
       flash[:error] = if e.response
@@ -503,6 +505,11 @@ class StudiesController < ApplicationController
   end
 
   private
+
+  def set_isa_json_compliance
+    @isa_json_compliant = @study.is_isa_json_compliant?
+  end
+
   def study_params
     params.require(:study).permit(:title, :description, :experimentalists, :investigation_id,
                                   *creator_related_params, :position, { publication_ids: [] },

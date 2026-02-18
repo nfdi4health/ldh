@@ -1,9 +1,9 @@
 require 'rest-client'
 require 'uri'
 
-module Nfdi4Health
+module Nfdi4health
 
-  class Client
+  class CshClient
     attr_accessor :transformed
     def initialize()
       @password = Seek::Config.n4h_password
