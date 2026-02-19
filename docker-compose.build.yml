@@ -1,3 +1,4 @@
 services:
   seek:
-    build: .
+    image: ${IMAGE}
+    #build: .
