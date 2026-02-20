@@ -5,6 +5,7 @@
 
 <%
   resource = form.object
+  resource_type = resource.class.name.underscore
   resource_type_text = text_for_resource(resource)
   collapsed = (resource.assets_creators.empty? && resource.other_creators.blank?) if collapsed.nil?
   assoc_text ||= resource.class.human_attribute_name('creators', default: t('creator').pluralize).downcase

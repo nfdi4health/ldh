@@ -1,0 +1,14 @@
+# https://github.com/cncf/gitvote/
+profiles:
+  default:
+    duration: 4w
+    pass_threshold: 50
+    allowed_voters:
+      teams: []
+      users:
+        - beanformer
+        - fmeineke
+        - MasoudAbedi
+        - ReneHaensel
+    periodic_status_check: null
+    close_on_passing: false

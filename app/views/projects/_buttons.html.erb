@@ -62,9 +62,20 @@
     <% end -%>
 
     <% if Seek::Config.isa_enabled %>
+
+
       <%= order_icon(item,current_user, order_investigations_project_path(item), item.investigations, 'investigation') %>
     <% end %>
-
+    <% if can_publish?(item) %>
+    <li><%= image_tag_for_key('publish', publish_to_csh_project_path(item), "Publish to NFDI4Health GCHSH", nil, "Publish to NFDI4Health GCHSH") -%></li>
+    <% else %>
+      <% explanation = "Your project does not include metadata, or The 'Publish to NFDI4Health GCHSH' item for #{text_for_resource(item).pluralize.downcase} in Server admin panel was deactivated by the admin." %>
+      <li>
+      <span class='disabled_icon disabled' onclick='alert("<%= explanation-%>")' data-tooltip='<%= tooltip(explanation) -%>'>
+          <%= image('publish', {:alt=>"Publish", :class=>"disabled"}) %> Publish to NFDI4Health GCHSH
+      </span>
+      </li>
+    <% end %>
     <% if Seek::Config.fair_data_station_enabled %>
       <li>
         <%= image_tag_for_key('import', import_from_fairdata_station_project_path(item), "Import from FAIR Data Station", nil, "Import from FAIR Data Station") -%>

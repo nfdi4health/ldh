@@ -42,6 +42,8 @@ gem 'google-analytics-rails'
 gem 'handlebars_assets'
 gem 'html-pipeline'
 gem 'i18n-js', '~> 3.9.2' # Version 4+ does not support the asset pipeline
+gem 'rdf'
+gem 'rdf-vocab', '~> 3.2.1'
 gem 'indefinite_article'
 gem 'jbuilder'
 gem 'jbuilder-json_api'

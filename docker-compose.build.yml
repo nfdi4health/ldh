@@ -1,5 +1,4 @@
 services:
   seek:
-    build: .
-  seek_workers:
-    build: .
+    image: ${IMAGE}
+    #build: .
