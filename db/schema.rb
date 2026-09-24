@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_18_152620) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_23_150237) do
   create_table "activity_logs", force: :cascade do |t|
     t.string "action"
     t.string "format"
@@ -591,7 +591,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_18_152620) do
     t.string "deleted_contributor"
     t.string "time_zone"
     t.integer "location_type"
-    t.bigint "event_type_id"
+    t.integer "event_type_id"
   end
 
   create_table "events_presentations", id: false, force: :cascade do |t|
