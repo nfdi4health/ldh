@@ -1,6 +1,6 @@
 {
   "data": {
-    "id": "151",
+    "id": "156",
     "type": "samples",
     "attributes": {
       "policy": {
@@ -16,8 +16,8 @@
       "tags": [
 
       ],
-      "created_at": "2024-11-20T10:14:07.000Z",
-      "updated_at": "2024-11-20T10:14:07.000Z",
+      "created_at": "2026-06-16T14:26:53.279Z",
+      "updated_at": "2026-06-16T14:26:53.728Z",
       "creators": [
 
       ],
@@ -34,12 +34,12 @@
         ],
         "patients": [
           {
-            "id": 149,
+            "id": 154,
             "type": "Sample",
             "title": "Fred Bloggs"
           },
           {
-            "id": 150,
+            "id": 155,
             "type": "Sample",
             "title": "Fred Bloggs"
           }
@@ -48,12 +48,12 @@
         "age": 42,
         "bool": true,
         "data file": {
-          "id": 136,
+          "id": 883654438,
           "type": "DataFile",
           "title": "This Data file"
         },
         "sop": {
-          "id": 68,
+          "id": 1055250576,
           "type": "Sop",
           "title": "This Sop"
         }
@@ -68,21 +68,21 @@
       "submitter": {
         "data": [
           {
-            "id": "1345",
+            "id": "1039988245",
             "type": "people"
           }
         ]
       },
       "sample_type": {
         "data": {
-          "id": "178",
+          "id": "183",
           "type": "sample_types"
         }
       },
       "projects": {
         "data": [
           {
-            "id": "1181",
+            "id": "1022252297",
             "type": "projects"
           }
         ]
@@ -90,7 +90,7 @@
       "data_files": {
         "data": [
           {
-            "id": "136",
+            "id": "883654438",
             "type": "data_files"
           }
         ]
@@ -113,21 +113,21 @@
       "people": {
         "data": [
           {
-            "id": "1345",
+            "id": "1039988245",
             "type": "people"
           }
         ]
       }
     },
     "links": {
-      "self": "/samples/151"
+      "self": "/samples/156"
     },
     "meta": {
-      "created": "2024-11-20T10:14:07.000Z",
-      "modified": "2024-11-20T10:14:07.000Z",
+      "created": "2026-06-16T14:26:53.279Z",
+      "modified": "2026-06-16T14:26:53.728Z",
       "api_version": "0.3",
       "base_url": "http://localhost:3000",
-      "uuid": "1a116530-8956-013d-24a2-0a81884ed284"
+      "uuid": "014ec8b4-ba66-47db-a767-cecf75455540"
     }
   },
   "jsonapi": {
