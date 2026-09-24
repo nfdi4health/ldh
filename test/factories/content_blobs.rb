@@ -2,13 +2,13 @@ FactoryBot.define do
   # ContentBlob
   # either url or data should be provided for assets
   factory(:content_blob) do
-    sequence(:uuid) { UUID.generate }
+    sequence(:uuid) { SecureRandom.uuid }
     sequence(:data) { |n| "data [#{n}]" }
     sequence(:original_filename) { |n| "file-#{n}" }
   end
   
   factory(:min_content_blob, class: ContentBlob) do
-    sequence(:uuid) { UUID.generate }
+    sequence(:uuid) { SecureRandom.uuid }
     data { 'Min Data' }
     original_filename { 'min file' }
     asset { FactoryBot.create(:pdf_sop, policy: FactoryBot.create(:downloadable_public_policy)) }
@@ -185,6 +185,12 @@ FactoryBot.define do
     content_type { 'text/x-comma-separated-values' }
     original_filename { 'csv_test.csv' }
     data { File.new("#{Rails.root}/test/fixtures/files/csv_test.csv", 'rb').read }
+  end
+
+  factory(:iso_8859_1_csv_content_blob, parent: :content_blob) do
+    content_type { 'text/csv' }
+    original_filename { 'iso-8859-1.csv' }
+    data { File.new("#{Rails.root}/test/fixtures/files/iso-8859-1.csv", 'rb').read }
   end
   
   factory(:tsv_content_blob, parent: :content_blob) do

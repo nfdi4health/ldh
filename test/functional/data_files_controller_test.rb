@@ -5,7 +5,6 @@ require 'openbis_test_helper'
 
 class DataFilesControllerTest < ActionController::TestCase
 
-  fixtures :all
 
   include AuthenticatedTestHelper
   include RdfTestCases
@@ -384,6 +383,14 @@ class DataFilesControllerTest < ActionController::TestCase
       get :index
       assert_response :success
     end
+  end
+
+  test 'should show inline content preview for pdf data file' do
+    pdf_data_file = FactoryBot.create(:data_file, content_blob: FactoryBot.create(:pdf_content_blob),
+                                       policy: FactoryBot.create(:downloadable_public_policy))
+    get :show, params: { id: pdf_data_file.id }
+    assert_response :success
+    assert_select 'div.renderer iframe', count: 1
   end
 
   test 'should show data file' do
@@ -1278,6 +1285,14 @@ class DataFilesControllerTest < ActionController::TestCase
     assert_response :success
   end
 
+  test 'explore csv with non utf-8 encoding' do
+    df = FactoryBot.create(:data_file, policy: FactoryBot.create(:public_policy),
+                                       content_blob: FactoryBot.create(:iso_8859_1_csv_content_blob))
+    get :explore, params: { id: df }
+    assert_response :success
+    assert_select 'div#spreadsheet_1 table.sheet td', text: /Temp/
+  end
+
   test 'explore spreadsheet with error logs' do
     data = FactoryBot.create :spreadsheet_with_error_logs_datafile, policy: FactoryBot.create(:public_policy)
     get :explore, params: { id: data }
@@ -1846,16 +1861,17 @@ class DataFilesControllerTest < ActionController::TestCase
   end
 
   test 'landing page for deleted private_item which DOI was minted' do
-    comment = 'the paper was restracted'
+    doi_citation_mock
+    comment = 'the paper was retracted'
     klass = 'DataFile'
     id = 123
     version = 1
     AssetDoiLog.create(asset_type: klass, asset_id: id, asset_version: version, action: AssetDoiLog::MINT)
-    AssetDoiLog.create(asset_type: klass, asset_id: id, asset_version: version, action: AssetDoiLog::DELETE, comment: comment)
+    AssetDoiLog.create(asset_type: klass, asset_id: id, asset_version: version, action: AssetDoiLog::DELETE, comment: comment, doi: '10.5072/test')
     assert AssetDoiLog.was_doi_minted_for?(klass, id, version)
     get :show, params: { id: id, version: version }
-    assert_response :not_found
-    assert_select 'p[class=comment]', text: /#{comment}/
+    assert_response :gone
+    assert_select 'p.comment', text: /#{comment}/
   end
 
   test 'should create cache job for small file' do
@@ -1886,6 +1902,38 @@ class DataFilesControllerTest < ActionController::TestCase
     assert_equal 'text/plain', blob.content_type
     assert_equal 100, blob.file_size
     assert blob.remote_content_fetch_task&.pending?
+  end
+
+  test 'should not create cache job for file if uploads are blocked' do
+    mock_http
+    params = { data_file: {
+      title: 'Small File',
+      project_ids: [projects(:sysmo_project).id]
+    },
+               content_blobs: [{
+                                 data_url: 'http://mockedlocation.com/small.txt',
+                                 make_local_copy: '0'
+                               }],
+               policy_attributes: valid_sharing }
+
+    with_config_value(:block_file_uploads, true) do
+      assert_no_enqueued_jobs(only: RemoteContentFetchingJob) do
+        assert_difference('DataFile.count') do
+          assert_difference('ContentBlob.count') do
+            post :create, params: params
+          end
+        end
+      end
+
+      assert_redirected_to data_file_path(assigns(:data_file))
+      blob = assigns(:data_file).content_blob
+      refute blob.cachable?
+      refute blob.url.blank?
+      assert_equal 'small.txt', blob.original_filename
+      assert_equal 'text/plain', blob.content_type
+      assert_equal 100, blob.file_size
+      refute blob.remote_content_fetch_task&.pending?
+    end
   end
 
   test 'should not create cache job if setting disabled' do
@@ -3202,22 +3250,27 @@ class DataFilesControllerTest < ActionController::TestCase
   test 'create metadata' do
     person = FactoryBot.create(:person)
     login_as(person)
+    attributed_data_file = FactoryBot.create(:data_file, contributor: person, policy: FactoryBot.create(:public_policy))
     blob = FactoryBot.create(:content_blob)
     session[:uploaded_content_blob_id] = blob.id
     project = person.projects.last
     params = { data_file: {
-        title: 'Small File',
-        project_ids: [project.id]
-    }, tag_list:'fish, soup',
-               policy_attributes: valid_sharing,
-               content_blob_id: blob.id.to_s,
-               assay_ids: [] }
+      title: 'Small File',
+      project_ids: [project.id]
+    }, tag_list: 'fish, soup',
+       policy_attributes: valid_sharing,
+       content_blob_id: blob.id.to_s,
+       assay_ids: [],
+       attributions: ActiveSupport::JSON.encode([['DataFile', attributed_data_file.id]])
+    }
 
     assert_difference('ActivityLog.count') do
       assert_difference('DataFile.count') do
-        assert_no_difference('Assay.count') do
-          assert_no_difference('AssayAsset.count') do
-            post :create_metadata, params: params
+        assert_difference('Relationship.count', 1) do
+          assert_no_difference('Assay.count') do
+            assert_no_difference('AssayAsset.count') do
+              post :create_metadata, params: params
+            end
           end
         end
       end
@@ -3233,6 +3286,7 @@ class DataFilesControllerTest < ActionController::TestCase
     assert_equal person, df.contributor
     assert_empty df.assays
     assert_equal ['fish','soup'].sort,df.tags.sort
+    assert_equal [attributed_data_file], df.attributions.collect(&:other_object)
 
     al = ActivityLog.last
     assert_equal 'create', al.action
@@ -3555,7 +3609,7 @@ class DataFilesControllerTest < ActionController::TestCase
     assert_equal cmt, cm.extended_metadata_type
     assert_equal 'fred',cm.get_attribute_value('name')
     assert_equal 22,cm.get_attribute_value('age')
-    assert_nil cm.get_attribute_value('date')
+    assert_nil cm.get_attribute_value('datetime')
 
     get :show, params: { id: df }
     assert_response :success
